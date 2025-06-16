@@ -1,0 +1,73 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {}
+  },
+  "libraries": {},
+  "projectFileDependencyGroups": {
+    "net9.0": []
+  },
+  "packageFolders": {
+    "/home/thebulletbot/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/home/thebulletbot/Documents/CMI Informatica/2024-2025/Software Quality/INFSQ-Assignment/2025-INFSQ/ScooterBackend/ScooterBackend.csproj",
+      "projectName": "ScooterBackend",
+      "projectPath": "/home/thebulletbot/Documents/CMI Informatica/2024-2025/Software Quality/INFSQ-Assignment/2025-INFSQ/ScooterBackend/ScooterBackend.csproj",
+      "packagesPath": "/home/thebulletbot/.nuget/packages/",
+      "outputPath": "/home/thebulletbot/Documents/CMI Informatica/2024-2025/Software Quality/INFSQ-Assignment/2025-INFSQ/ScooterBackend/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/home/thebulletbot/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "/usr/lib/dotnet/library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.100"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/9.0.106/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
