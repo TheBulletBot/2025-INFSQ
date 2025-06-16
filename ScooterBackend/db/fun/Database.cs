@@ -5,9 +5,24 @@ using Microsoft.EntityFrameworkCore;
 namespace ScooterBackend{
     public static class DatabaseFunctions{
 
-        public static void Query(){
+        public static List<string> Query(string queryString){
             using(var connection = new SqliteConnection("Data Source=db/db/INFSQScooterBackend.db")){
-                throw new NotImplementedException();
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText =
+                queryString;
+
+
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    List<string> result = new();
+                    while (reader.Read())
+                    {
+                        result.Append(reader.GetString(0));
+                    }
+                    return result;
+                }
             }
         }
     }
