@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
 
 namespace ScooterBackend{
     public static class DatabaseFunctions{
