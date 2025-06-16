@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace ScooterBackend{
     public static class DatabaseFunctions{
 
-        public static List<string> Query(string queryString){
+        public static List<T> Query<T>(string queryString){
             using(var connection = new SqliteConnection("Data Source=db/db/INFSQScooterBackend.db")){
                 connection.Open();
 
@@ -21,7 +22,23 @@ namespace ScooterBackend{
                     {
                         result.Append(reader.GetString(0));
                     }
-                    return result;
+                    List<T> the = new();
+                    foreach (var json in result)
+                    {
+                        try
+                        {
+                            T obj = JsonSerializer.Deserialize<T>(json);
+                            if (obj != null)
+                            {
+                                the.Add(obj);
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            Console.WriteLine($"Failed to deserialize: {ex.Message}");
+                        }
+                    }
+                    return the;
                 }
             }
         }
