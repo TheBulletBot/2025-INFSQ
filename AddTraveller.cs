@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-
+/*
 public class TravelerFunc
 {
     public void AddTraveler(string firstName, string lastName, DateTime birthday, string gender,
@@ -58,3 +58,4 @@ public class TravelerFunc
     }
 
 }
+*/
