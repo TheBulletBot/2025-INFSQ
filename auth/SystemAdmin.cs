@@ -1,10 +1,14 @@
-﻿public class SystemAdmin : ServiceEngineer
+﻿
+using System.Text;
+using System.Text.RegularExpressions;
+
+public class SystemAdmin : ServiceEngineer
 {
     public SystemAdmin(string username, string role) : base(username, role) { }
 
     public override void Menu()
     {
-    string[] options = {
+        string[] options = {
         "Change password",
         "Edit scooter attributes",
         "Search scooter",
@@ -18,317 +22,259 @@
         "Backup system",
         "Restore backup with code",
         "View logs",
-        "Add new Traveller",
-        "Update Traveller info",
-        "Delete Traveller",
+        "Add new Traveler",
+        "Update Traveler info",
+        "Delete Traveler",
         "Add new Scooter",
         "Update Scooter info",
         "Delete Scooter",
-        "Search Traveller",
+        "Search Traveler",
         "Return"
     };
 
-    int selection = 0;
-    ConsoleKey key;
+        int selection = 0;
+        ConsoleKey key;
 
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine($"=== System Administrator Menu ({Username}) ===");
-
-        for (int i = 0; i < options.Length; i++)
+        while (true)
         {
-            if (i == selection)
-            {
-                Console.BackgroundColor = ConsoleColor.Gray;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine($"> {options[i]}");
-                Console.ResetColor();
-            }
-            else
-            {
-                Console.WriteLine($"  {options[i]}");
-            }
-        }
+            Console.Clear();
+            Console.WriteLine($"=== System Administrator Menu ({Username}) ===");
 
-        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-        key = keyInfo.Key;
-
-        if (key == ConsoleKey.UpArrow)
-            selection = (selection - 1 + options.Length) % options.Length;
-        else if (key == ConsoleKey.DownArrow)
-            selection = (selection + 1) % options.Length;
-        else if (key == ConsoleKey.Enter)
-        {
-            switch (selection)
+            for (int i = 0; i < options.Length; i++)
             {
-                case 0: ChangePassword(); break;
-                case 1: ChangeScooter(); break;
-                case 2: SearchScooter(); break;
-                case 3: ListUsersAndRoles(); break;
-                case 4: AddServiceEngineer(); break;
-                case 5: UpdateServiceEngineer(); break;
-                case 6: DeleteServiceEngineer(); break;
-                case 7: ResetServiceEngineerPassword(); break;
-                case 8: UpdateMyProfile(); break;
-                case 9: DeleteMyAccount(); break;
-                case 10: BackupSystem(); break;
-                case 11: RestoreSystem(); break;
-                case 12: ViewLogs(); break;
-                case 13: AddTraveller(); break;
-                case 14: UpdateTraveller(); break;
-                case 15: DeleteTraveller(); break;
-                case 16: AddScooter(); break;
-                case 17: UpdateScooter(); break;
-                case 18: DeleteScooter(); break;
-                case 19: SearchTraveller(); break;
-                case 20: return;
+                if (i == selection)
+                {
+                    Console.BackgroundColor = ConsoleColor.Gray;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.WriteLine($"> {options[i]}");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.WriteLine($"  {options[i]}");
+                }
+            }
+
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            key = keyInfo.Key;
+
+            if (key == ConsoleKey.UpArrow)
+                selection = (selection - 1 + options.Length) % options.Length;
+            else if (key == ConsoleKey.DownArrow)
+                selection = (selection + 1) % options.Length;
+            else if (key == ConsoleKey.Enter)
+            {
+                /*switch (selection)
+                {
+                    case 0: UpdateOwnPassword(); break;
+                    case 1: UpdateScooter(); break;
+                    case 2: SearchScooter(); break;
+                    case 3: ShowAllUsersAndRoles(); break;
+                    case 4: AddEngineer(); break;
+                    case 5: UpdateEngineer(); break;
+                    case 6: DeleteEngineer(); break;
+                    case 7: ResetEngineerPassword(); break;
+                    case 8: UpdateOwnPassword(); break;
+                    case 9: DeleteOwnAccount(); break;
+                    case 10: BackupSystem(); break;
+                    case 11: RestoreSystem(); break;
+                    case 12: ViewLogs(); break;
+                    case 13: AddTraveler(); break;
+                    case 14: UpdateTraveller(); break;
+                    case 15: DeleteTraveller(); break;
+                    case 16: AddScooter(); break;
+                    case 17: UpdateScooter(); break;
+                    case 18: DeleteScooter(); break;
+                    case 19: SearchAndPrintTravellers(); break;
+                    case 20: return;
+                }*/
             }
         }
     }
-}
-    
+    private readonly string connection =
+        @"Data Source=C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-1\ScooterBackend\db\db\INFSQScooterBackend.db";
+    private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");
+    private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");
 
-    private void ListUsersAndRoles()
+
+    public void AddTraveler(string username, string password,
+        string firstName, string lastName, DateTime birthday, string gender,
+        string street, string houseNumber, string zipCode, string city,
+        string email, string phone, string license)
     {
-        var users = DatabaseHelper.Query<User>("SELECT Username, Role FROM Users");
+        if (!Regex.IsMatch(zipCode, @"^\d{4}[A-Z]{2}$"))
+            throw new ArgumentException("Ongeldige postcode");
+        if (!Regex.IsMatch(phone, @"^\d{8}$"))
+            throw new ArgumentException("Ongeldig telefoonnummer");
+        if (!Regex.IsMatch(license, @"^[A-Z]{1,2}\d{7}$"))
+            throw new ArgumentException("Ongeldig rijbewijsnummer");
+        if (password.Length < 4)
+            throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
+
+        string passwordHash = CryptographyHelper.CreateHashValue(password);
+        string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+
+        string encryptedPhone = CryptographyHelper.Encrypt(phone);
+        string encryptedStreet = CryptographyHelper.Encrypt(street);
+        string encryptedCity = CryptographyHelper.Encrypt(city);
+
+        string sql = $@"INSERT INTO Traveller 
+            (Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender,
+             Street, HouseNumber, ZipCode, City, Mail, Phone, LicenseNumber, RegistrationDate)
+            VALUES
+            ('{Guid.NewGuid()}', '{username}', '{passwordHash}', '{firstName}', '{lastName}', '{birthday:yyyy-MM-dd}', '{gender}',
+             '{encryptedStreet}', '{houseNumber}', '{zipCode}', '{encryptedCity}', '{email}', '{encryptedPhone}', '{license}', '{registrationDate}')";
+
+        DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Traveller succesvol toegevoegd.");
+    }
+
+    public void ShowAllUsersAndRoles()
+    {
+        string sql = "SELECT Id, Username, Role FROM User ORDER BY Role, Username";
+        var users = DatabaseHelper.Query<DBUser>(sql);
+
+        Console.WriteLine("\n--- Gebruikers en Rollen ---\n");
+        if (users.Count == 0)
+        {
+            Console.WriteLine(" Geen gebruikers gevonden.");
+            return;
+        }
+
         foreach (var user in users)
         {
-            Console.WriteLine($"{user.Username} - {user.Role}");
+            Console.WriteLine($"UserName: {user.Username,-15} | Rol: {user.Role}");
         }
     }
 
-    private void AddServiceEngineer()
+    public void AddEngineer(string username, string password)
     {
-        Console.Write("Username: ");
-        string username = Console.ReadLine();
-        Console.Write("Password: ");
-        string password = Console.ReadLine();
-        string sql = $"INSERT INTO Users (Username, Password, Role) VALUES ('{username}', '{password}', 'Service Engineer')";
+        string passwordHash = CryptographyHelper.CreateHashValue(password);
+        string sql = $"INSERT INTO User (Id, Username, PasswordHash, Role) VALUES ('{Guid.NewGuid()}', '{username}', '{passwordHash}', 'Service Engineer')";
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Service Engineer toegevoegd!");
     }
 
-    private void UpdateServiceEngineer()
+    public void UpdateEngineer(string currentUsername, string newUsername, string newPassword)
     {
-        Console.Write("Enter username to update: ");
-        string username = Console.ReadLine();
-        Console.Write("New password: ");
-        string password = Console.ReadLine();
-        string sql = $"UPDATE Users SET Password = '{password}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
+        string sql = $"UPDATE User SET Username = '{newUsername}', PasswordHash = '{passwordHash}' WHERE Username = '{currentUsername}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Service Engineer bijgewerkt.");
     }
 
-    private void DeleteServiceEngineer()
+    public void DeleteEngineer(string username)
     {
-        Console.Write("Enter username to delete: ");
-        string username = Console.ReadLine();
-        string sql = $"DELETE FROM Users WHERE Username = '{username}' AND Role = 'Service Engineer'";
+        string sql = $"DELETE FROM User WHERE Username = '{username}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Service Engineer verwijderd: " + username);
     }
 
-    private void ResetServiceEngineerPassword()
+    public void ResetEngineerPassword(string username)
     {
-        Console.Write("Enter username to reset password: ");
-        string username = Console.ReadLine();
-        string tempPassword = "Temp1234"; // Random generator is beter in productie
-        string sql = $"UPDATE Users SET Password = '{tempPassword}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
+        string tempPassword = "Temp" + new Random().Next(1000, 9999);
+        string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
+        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine($"Temporary password set: {tempPassword}");
+        Console.WriteLine($"Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
     }
 
-    private void UpdateMyProfile()
+
+
+    public void DeleteOwnAccount(string username)
     {
-        Console.Write("New password: ");
-        string newPass = Console.ReadLine();
-        string sql = $"UPDATE Users SET Password = '{newPass}' WHERE Username = '{Username}'";
+        string sql = $"DELETE FROM User WHERE Username = '{username}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Je account is verwijderd.");
     }
 
-    private void DeleteMyAccount()
+    public void SearchAndPrintTravellers(string searchKey)
     {
-        string sql = $"DELETE FROM Users WHERE Username = '{Username}'";
-        DatabaseHelper.ExecuteStatement(sql);
-    }
+        string sql = $@"SELECT * FROM Traveller WHERE FirstName LIKE '%{searchKey}%' OR LastName LIKE '%{searchKey}%' OR Phone LIKE '%{searchKey}%' OR Mail LIKE '%{searchKey}%' OR LicenseNumber LIKE '%{searchKey}%'";
+        var travellers = DatabaseHelper.Query<Traveler>(sql);
 
-    private void BackupSystem()
-    {
-        string backupName = $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.db";
-        File.Copy("INFSQScooterBackend.db", backupName);
-        Console.WriteLine($"Backup created: {backupName}");
-    }
-
-    private void RestoreSystem()
-    {
-        Console.Write("Enter one-time backup restore code: ");
-        string code = Console.ReadLine();
-
-        // Simuleer validatie
-        if (code == "RESTORE123") // In praktijk valideren via een aparte tabel
+        Console.WriteLine("\n--- Zoekresultaten ---\n");
+        if (travellers.Count == 0)
         {
-            Console.Write("Enter backup file path: ");
-            string backupPath = Console.ReadLine();
-            if (File.Exists(backupPath))
-            {
-                File.Copy(backupPath, "INFSQScooterBackend.db", overwrite: true);
-                Console.WriteLine("Backup restored successfully.");
-            }
-            else
-            {
-                Console.WriteLine("Backup file not found.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Invalid code.");
-        }
-    }
-
-    private void ViewLogs()
-    {
-        string path = "logfile.txt";
-        if (File.Exists(path))
-        {
-            var lines = File.ReadAllLines(path);
-            foreach (var line in lines)
-                Console.WriteLine(line);
-        }
-        else
-        {
-            Console.WriteLine("No log file found.");
-        }
-    }
-
-    private void AddTraveller()
-    {
-        Console.WriteLine("=== Add New Traveler ===");
-
-        Console.Write("First name: ");
-        string firstName = Console.ReadLine();
-        Console.Write("Last name: ");
-        string lastName = Console.ReadLine();
-        Console.Write("Birthday (yyyy-MM-dd): ");
-        string birthday = Console.ReadLine();
-        Console.Write("Gender: ");
-        string gender = Console.ReadLine();
-        Console.Write("Street name: ");
-        string street = Console.ReadLine();
-        Console.Write("House number: ");
-        string houseNumber = Console.ReadLine();
-        Console.Write("Zip code: ");
-        string zip = Console.ReadLine();
-        Console.Write("City: ");
-        string city = Console.ReadLine();
-        Console.Write("Email: ");
-        string email = Console.ReadLine();
-        Console.Write("Phone: ");
-        string phone = Console.ReadLine();
-        Console.Write("License number: ");
-        string license = Console.ReadLine();
-
-        string sql = $@"
-        INSERT INTO Travelers 
-        (FirstName, LastName, Birthday, Gender, StreetName, HouseNumber, ZipCode, City, Email, Phone, LicenseNumber)
-        VALUES 
-        ('{firstName}', '{lastName}', '{birthday}', '{gender}', '{street}', '{houseNumber}', '{zip}', '{city}', '{email}', '{phone}', '{license}')
-    ";
-
-        DatabaseHelper.ExecuteStatement(sql);
-    }
-
-    private void UpdateTraveller()
-    {
-        Console.Write("Enter Traveler ID to update: ");
-        if (!int.TryParse(Console.ReadLine(), out int id))
-        {
-            Console.WriteLine("Invalid ID.");
+            Console.WriteLine(" Geen reizigers gevonden ");
             return;
         }
+        foreach (var t in travellers)
+        {
+            Console.WriteLine($"ID: {t.Id}\nNaam: {t.FirstName} {t.LastName}\nGeboortedatum: {t.Birthday}\nGeslacht: {t.Gender}\nAdres: {t.StreetName} {t.HouseNumber}, {t.ZipCode} {t.City}\nMail: {t.Email}\nTelefoon: {t.Phone}\nRijbewijs: {t.LicenseNumber}\n--------------------------\n");
+        }
+    }
+    public void UpdateTraveller(string oldFirstName, string oldLastName, string oldPhoneNumber,
+                            string newUsername, string newPassword, string newFirstName, string newLastName, DateTime newBirthDate,
+                            string newGender, string newStreet, string newHouseNumber, string newZipCode, string newCity,
+                            string newEmail, string newPhoneNumber, string newLicenseNumber)
+    {
+        if (!Regex.IsMatch(newZipCode, @"^\d{4}[A-Z]{2}$"))
+            throw new ArgumentException("Ongeldige postcode");
+        if (!Regex.IsMatch(newPhoneNumber, @"^\d{8}$"))
+            throw new ArgumentException("Ongeldig telefoonnummer");
+        if (!Regex.IsMatch(newLicenseNumber, @"^[A-Z]{1,2}\d{7}$"))
+            throw new ArgumentException("Ongeldig rijbewijsnummer");
+        if (newPassword.Length < 4)
+            throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
 
-        Console.Write("New first name: ");
-        string firstName = Console.ReadLine();
-        Console.Write("New last name: ");
-        string lastName = Console.ReadLine();
-        Console.Write("New birthday (yyyy-MM-dd): ");
-        string birthday = Console.ReadLine();
-        Console.Write("New gender: ");
-        string gender = Console.ReadLine();
-        Console.Write("New street name: ");
-        string street = Console.ReadLine();
-        Console.Write("New house number: ");
-        string houseNumber = Console.ReadLine();
-        Console.Write("New zip code: ");
-        string zip = Console.ReadLine();
-        Console.Write("New city: ");
-        string city = Console.ReadLine();
-        Console.Write("New email: ");
-        string email = Console.ReadLine();
-        Console.Write("New phone: ");
-        string phone = Console.ReadLine();
-        Console.Write("New license number: ");
-        string license = Console.ReadLine();
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
+
+        string encryptedPhone = CryptographyHelper.Encrypt(newPhoneNumber);
+        string encryptedStreet = CryptographyHelper.Encrypt(newStreet);
+        string encryptedCity = CryptographyHelper.Encrypt(newCity);
+
+        string oldEncryptedPhone = CryptographyHelper.Encrypt(oldPhoneNumber);
 
         string sql = $@"
-        UPDATE Travelers SET 
-            FirstName = '{firstName}',
-            LastName = '{lastName}',
-            Birthday = '{birthday}',
-            Gender = '{gender}',
-            StreetName = '{street}',
-            HouseNumber = '{houseNumber}',
-            ZipCode = '{zip}',
-            City = '{city}',
-            Email = '{email}',
-            Phone = '{phone}',
-            LicenseNumber = '{license}'
-        WHERE Id = {id}
-    ";
+            UPDATE Traveller SET
+                Username = '{newUsername}',
+                PasswordHash = '{passwordHash}',
+                FirstName = '{newFirstName}',
+                LastName = '{newLastName}',
+                Birthday = '{newBirthDate:yyyy-MM-dd}',
+                Gender = '{newGender}',
+                Street = '{encryptedStreet}',
+                HouseNumber = '{newHouseNumber}',
+                ZipCode = '{newZipCode}',
+                City = '{encryptedCity}',
+                Mail = '{newEmail}',
+                Phone = '{encryptedPhone}',
+                LicenseNumber = '{newLicenseNumber}'
+            WHERE FirstName = '{oldFirstName}' AND LastName = '{oldLastName}' AND Phone = '{oldEncryptedPhone}'
+        ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Traveller succesvol bijgewerkt.");
     }
 
-    private void DeleteTraveller()
-    {
-        Console.Write("Enter Traveler ID to delete: ");
-        if (!int.TryParse(Console.ReadLine(), out int id))
-        {
-            Console.WriteLine("Invalid ID.");
-            return;
-        }
 
-        string sql = $"DELETE FROM Travelers WHERE Id = {id}";
+    public void DeleteTraveller(string firstName, string lastName, string phoneNumber)
+    {
+        string encryptedPhone = CryptographyHelper.Encrypt(phoneNumber);
+        string sql = $"DELETE FROM Traveller WHERE FirstName = '{firstName}' AND LastName = '{lastName}' AND Phone = '{encryptedPhone}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine($"Traveller verwijderd: {firstName} {lastName}");
     }
-
-    private void AddScooter()
+    public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
-        Console.Write("Serial number: ");
-        string serial = Console.ReadLine();
-        Console.Write("Brand: ");
-        string brand = Console.ReadLine();
-        string sql = $"INSERT INTO Scooters (SerialNumber, Brand) VALUES ('{serial}', '{brand}')";
+        string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
+
+        string sql = $@"
+            INSERT INTO Scooter 
+            (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
+            VALUES
+            ('{brand}', '{model}', {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
+        ";
+
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Scooter succesvol toegevoegd.");
     }
-
-    private void UpdateScooter()
+    public void DeleteScooter(string scooterId)
     {
-        Console.Write("Serial number to update: ");
-        string serial = Console.ReadLine();
-        Console.Write("New brand: ");
-        string brand = Console.ReadLine();
-        string sql = $"UPDATE Scooters SET Brand = '{brand}' WHERE SerialNumber = '{serial}'";
+        string sql = $"DELETE FROM Scooter WHERE Id = '{scooterId}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine($"Scooter met ID {scooterId} is verwijderd.");
     }
 
-    private void DeleteScooter()
-    {
-        Console.Write("Enter serial number to delete: ");
-        string serial = Console.ReadLine();
-        string sql = $"DELETE FROM Scooters WHERE SerialNumber = '{serial}'";
-        DatabaseHelper.ExecuteStatement(sql);
-    }
-
-    private void SearchTraveller()
-    {
-        
-    }
 }

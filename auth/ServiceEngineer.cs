@@ -56,13 +56,13 @@ public class ServiceEngineer : User
             switch (selection)
             {
                 case 0:
-                    ChangePassword();
+                    //UpdateOwnPassword();
                     break;
                 case 1:
-                    ChangeScooter();
+                    //UpdateScooter();
                     break;
                 case 2:
-                    SearchScooter();
+                    //SearchScooter();
                     break;
                 case 3:
                     return;
@@ -71,22 +71,34 @@ public class ServiceEngineer : User
     }
 }
 
-    protected void ChangePassword()
+    public void UpdateScooter(string id, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
-        Console.Write("Enter your new password: ");
-        string password = Console.ReadLine();
-        Console.WriteLine("Password succesfully changed.");
-        Console.WriteLine("Hit any key to continue");
-        Console.ReadKey();
-    }
+        string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
 
-    protected void ChangeScooter()
-    {
-        
-    }
+        string sql = $@"
+            UPDATE Scooter
+            SET Brand = '{brand}',
+                Model = '{model}',
+                TopSpeed = {topSpeed},
+                BatteryCapacity = {battery},
+                StateOfCharge = {charge},
+                TargetRange = {totalRange},
+                Location = '{location}',
+                OutOfService = {outOfService},
+                Mileage = {mileage},
+                LastMaintenance = '{formattedDate}'
+            WHERE Id = '{id}'
+        ";
 
-    protected void SearchScooter()
+        DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Scooter succesvol bijgewerkt.");
+    }
+    public void UpdateOwnPassword(string username, string newPassword) //(string OwnUserName)
     {
-        
+        // kan nu nog alle ww veranderen 
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
+        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}'";
+        DatabaseHelper.ExecuteStatement(sql);
+        Console.WriteLine("Je account is bijgewerkt.");
     }
 }
