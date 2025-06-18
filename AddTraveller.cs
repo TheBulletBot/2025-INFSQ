@@ -1,9 +1,7 @@
 using System;
-using System.Data.SQLite;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
+/*
 public class TravelerFunc
 {
     private readonly string _connectionString =
@@ -67,43 +65,8 @@ public class TravelerFunc
             }
         }
 
-        Console.WriteLine("✅ Traveller succesvol toegevoegd.");
+        Console.WriteLine("Traveller succesvol toegevoegd.");
     }
 
-    private string Encrypt(string plainText)
-    {
-        using (var aes = Aes.Create())
-        {
-            aes.Key = _aesKey;
-            aes.IV = _aesIV;
-
-            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
-            byte[] encrypted = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
-            return Convert.ToBase64String(encrypted);
-        }
-    }
-
-    private int IntHashPassword(string password)
-    {
-        using (SHA256 sha = SHA256.Create())
-        {
-            byte[] hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return BitConverter.ToInt32(hashBytes, 0); // Eerste 4 bytes → int
-        }
-    }
-
-    public string Decrypt(string encryptedText)
-    {
-        using (var aes = Aes.Create())
-        {
-            aes.Key = _aesKey;
-            aes.IV = _aesIV;
-
-            var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-            byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-            byte[] decryptedBytes = decryptor.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
-            return Encoding.UTF8.GetString(decryptedBytes);
-        }
-    }
 }
+*/

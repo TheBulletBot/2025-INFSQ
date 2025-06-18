@@ -1,6 +1,8 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic;
 using SQLitePCL;
+using ScooterBackend;
+
 public static class DBSetup
 {
     private static string ConnectionString = new SqliteConnectionStringBuilder()

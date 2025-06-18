@@ -97,6 +97,7 @@ public class SystemADFunc
 
             using (var cmd = new SQLiteCommand(sql, conn))
             {
+                
                 cmd.Parameters.AddWithValue("@Username", username);
                 cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
 
@@ -335,11 +336,12 @@ public class SystemADFunc
 
                 object result = cmd.ExecuteScalar();
 
-                return result?.ToString(); // Geeft "Service Engineer" of "Admin" terug, of null
+                return result?.ToString();
             }
         }
     }
 
+    
 
 
 
