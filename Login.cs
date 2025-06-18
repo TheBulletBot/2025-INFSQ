@@ -34,7 +34,7 @@ public static class Login
             if (loginAttemptDBUser.Count <= 0)
             {
                 //Return invalid username Error
-                System.Console.WriteLine(loginAttemptDBUser[0].Username);
+                System.Console.WriteLine(CryptographyHelper.Decrypt(loginAttemptDBUser[0].Username));
                 continue;
             }
             //compare passwordHash with Hashed password input. 
@@ -44,11 +44,11 @@ public static class Login
                 switch (loginAttemptDBUser[0].Role)
                 {
                     case "ENGINEER":
-                        user = new ServiceEngineer(loginAttemptDBUser[0].Username, loginAttemptDBUser[0].Role); break;
+                        user = new ServiceEngineer(CryptographyHelper.Decrypt(loginAttemptDBUser[0].Username), loginAttemptDBUser[0].Role); break;
                     case "ADMIN":
-                        user = new SystemAdmin(loginAttemptDBUser[0].Username, loginAttemptDBUser[0].Role); break;
+                        user = new SystemAdmin(CryptographyHelper.Decrypt(loginAttemptDBUser[0].Username), loginAttemptDBUser[0].Role); break;
                     case "SUPERADMIN":
-                        user = new SuperAdmin(loginAttemptDBUser[0].Username, loginAttemptDBUser[0].Role); break;
+                        user = new SuperAdmin(CryptographyHelper.Decrypt(loginAttemptDBUser[0].Username), loginAttemptDBUser[0].Role); break;
                 }
                 user.Menu();
                 correctLogin = true;
