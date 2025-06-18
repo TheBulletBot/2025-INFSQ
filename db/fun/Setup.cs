@@ -51,6 +51,7 @@ public static class DBSetup
             StateOfCharge INTEGER,
             TargetMin INTEGER,
             TargetMax INTEGER,
+            Mileage INTEGER,
             Location TEXT,
             OutOfService INTEGER,
             LastService DATE
@@ -79,6 +80,7 @@ public static class DBSetup
                     StateOfCharge,
                     TargetMin,
                     TargetMax,
+                    Mileage,
                     Location,
                     OutOfService,
                     LastService) 
@@ -92,6 +94,7 @@ public static class DBSetup
                     70,
                     30,
                     80,
+                    3456,
                     'here',
                     0,
                     1762025),
@@ -103,6 +106,7 @@ public static class DBSetup
                     80,
                     30,
                     80,
+                    1295,
                     '19.94636:162.84792',
                     0,
                     1-6-2025),
@@ -114,6 +118,7 @@ public static class DBSetup
                     40,
                     30,
                     80,
+                    8465,
                     '19.94636:162.84792',
                     0,
                     1-6-2025);";
