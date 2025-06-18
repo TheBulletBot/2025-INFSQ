@@ -54,7 +54,7 @@ public class ServiceEngineer : User
     public void UpdateOwnPassword(string username, string newPassword) //(string OwnUserName)
     {
         // kan nu nog alle ww veranderen 
-        string passwordHash = CryptoHelper.HashPassword(newPassword);
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}'";
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine("Je account is bijgewerkt.");
@@ -101,12 +101,12 @@ public class Admin : ServiceEngineer
         if (password.Length < 4)
             throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
 
-        string passwordHash = CryptoHelper.HashPassword(password);
+        string passwordHash = CryptographyHelper.CreateHashValue(password);
         string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
 
-        string encryptedPhone = CryptoHelper.Encrypt(phone);
-        string encryptedStreet = CryptoHelper.Encrypt(street);
-        string encryptedCity = CryptoHelper.Encrypt(city);
+        string encryptedPhone = CryptographyHelper.Encrypt(phone);
+        string encryptedStreet = CryptographyHelper.Encrypt(street);
+        string encryptedCity = CryptographyHelper.Encrypt(city);
 
         string sql = $@"INSERT INTO Traveller 
             (Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender,
@@ -139,7 +139,7 @@ public class Admin : ServiceEngineer
 
     public void AddEngineer(string username, string password)
     {
-        string passwordHash = CryptoHelper.HashPassword(password);
+        string passwordHash = CryptographyHelper.CreateHashValue(password);
         string sql = $"INSERT INTO User (Id, Username, PasswordHash, Role) VALUES ('{Guid.NewGuid()}', '{username}', '{passwordHash}', 'Service Engineer')";
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine("Service Engineer toegevoegd!");
@@ -147,7 +147,7 @@ public class Admin : ServiceEngineer
 
     public void UpdateEngineer(string currentUsername, string newUsername, string newPassword)
     {
-        string passwordHash = CryptoHelper.HashPassword(newPassword);
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = $"UPDATE User SET Username = '{newUsername}', PasswordHash = '{passwordHash}' WHERE Username = '{currentUsername}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine("Service Engineer bijgewerkt.");
@@ -163,7 +163,7 @@ public class Admin : ServiceEngineer
     public void ResetEngineerPassword(string username)
     {
         string tempPassword = "Temp" + new Random().Next(1000, 9999);
-        string passwordHash = CryptoHelper.HashPassword(tempPassword);
+        string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
         string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine($"Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
@@ -208,13 +208,13 @@ public class Admin : ServiceEngineer
         if (newPassword.Length < 4)
             throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
 
-        string passwordHash = CryptoHelper.HashPassword(newPassword);
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
 
-        string encryptedPhone = CryptoHelper.Encrypt(newPhoneNumber);
-        string encryptedStreet = CryptoHelper.Encrypt(newStreet);
-        string encryptedCity = CryptoHelper.Encrypt(newCity);
+        string encryptedPhone = CryptographyHelper.Encrypt(newPhoneNumber);
+        string encryptedStreet = CryptographyHelper.Encrypt(newStreet);
+        string encryptedCity = CryptographyHelper.Encrypt(newCity);
 
-        string oldEncryptedPhone = CryptoHelper.Encrypt(oldPhoneNumber);
+        string oldEncryptedPhone = CryptographyHelper.Encrypt(oldPhoneNumber);
 
         string sql = $@"
             UPDATE Traveller SET
@@ -241,7 +241,7 @@ public class Admin : ServiceEngineer
 
     public void DeleteTraveller(string firstName, string lastName, string phoneNumber)
     {
-        string encryptedPhone = CryptoHelper.Encrypt(phoneNumber);
+        string encryptedPhone = CryptographyHelper.Encrypt(phoneNumber);
         string sql = $"DELETE FROM Traveller WHERE FirstName = '{firstName}' AND LastName = '{lastName}' AND Phone = '{encryptedPhone}'";
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine($"Traveller verwijderd: {firstName} {lastName}");
@@ -286,7 +286,7 @@ public class SuperAdmin : Admin
     }
     public void AddSystemAdministrator(string username, string password)
     {
-        string passwordHash = CryptoHelper.HashPassword(password);
+        string passwordHash = CryptographyHelper.CreateHashValue(password);
         string id = Guid.NewGuid().ToString();
 
         string sql = $@"
@@ -300,7 +300,7 @@ public class SuperAdmin : Admin
 
     public void UpdateSystemAd(string currentUsername, string newUsername, string newPassword)
     {
-        string passwordHash = CryptoHelper.HashPassword(newPassword);
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
 
         string sql = $@"
             UPDATE User
@@ -325,7 +325,7 @@ public class SuperAdmin : Admin
     public void ResetSystemAdPassword(string username)
     {
         string tempPassword = "Temp" + new Random().Next(1000, 9999);
-        string passwordHash = CryptoHelper.HashPassword(tempPassword);
+        string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
 
         string sql = $@"
             UPDATE User
@@ -337,48 +337,5 @@ public class SuperAdmin : Admin
         Console.WriteLine($"Tijdelijk wachtwoord voor {username}: {tempPassword}");
     }
 }
-    public static class CryptoHelper
-    {
-        
-        private static readonly byte[] aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");
-        private static readonly byte[] aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");
-
-        public static string HashPassword(string password)
-        {
-            using (SHA256 sha = SHA256.Create())
-            {
-                byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hash);
-            }
-        }
-        public static string Encrypt(string plainText)
-        {
-            using (Aes aes = Aes.Create())
-            {
-                aes.Key = aesKey;
-                aes.IV = aesIV;
-                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
-                byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
-                byte[] encryptedBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
-
-                return Convert.ToBase64String(encryptedBytes);
-            }
-        }
-        public static string Decrypt(string encryptedText)
-        {
-            using (Aes aes = Aes.Create())
-            {
-                aes.Key = aesKey;
-                aes.IV = aesIV;
-                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-
-                byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-                byte[] plainBytes = decryptor.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
-
-                return Encoding.UTF8.GetString(plainBytes);
-            }
-        }
-    }
 
 
