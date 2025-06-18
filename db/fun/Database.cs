@@ -6,16 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 public static class DatabaseHelper
 {
+    public static string DatabasePath = "../../../db/db/INFSQScooterBackend.db";
     private static string readString = new SqliteConnectionStringBuilder()
-        {
-            Mode = SqliteOpenMode.ReadOnly,
-            DataSource = "../../../db/db/INFSQScooterBackend.db"
-        }.ToString();
+    {
+        Mode = SqliteOpenMode.ReadOnly,
+        DataSource = DatabaseHelper.DatabasePath
+    }.ToString();
     
     private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadWriteCreate,
-            DataSource = "../../../db/db/INFSQScooterBackend.db"
+            DataSource = DatabaseHelper.DatabasePath
         }.ToString();
 
     /// <summary>

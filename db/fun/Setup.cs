@@ -1,16 +1,20 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic;
 using SQLitePCL;
+/// <summary>
+/// This class and these functions are here to quickly set up a database when one doesn't exist. 
+/// THIS IS FOR THE GRADING TEACHER'S CONVENIENCE. So that they have access to at lease SOME sample data when the database starts.
+/// </summary>
 public static class DBSetup
 {
     private static string ConnectionString = new SqliteConnectionStringBuilder()
     {
         Mode = SqliteOpenMode.ReadWriteCreate,
-        DataSource = "../../../db/db/INFSQScooterBackend.db"
+        DataSource = DatabaseHelper.DatabasePath
     }.ToString();
     public static void SetupDB()
     {
-        if (!File.Exists("../../../db/db/INFSQScooterBackend.db"))
+        if (!File.Exists(DatabaseHelper.DatabasePath))
         {
             CreateDBFile();
             InitScooterTable();
@@ -29,7 +33,7 @@ public static class DBSetup
     }
     private static void CreateDBFile()
     {
-        File.Create("../../../db/db/INFSQScooterBackend.db");
+        File.Create(DatabaseHelper.DatabasePath);
     }
     private static bool IsDatabaseEmpty()
     {
@@ -165,11 +169,15 @@ public static class DBSetup
     }
     private static void PopulateTravelerTable()
     {
+        var encryptedStreet = CryptographyHelper.Encrypt("Wijnhaven");
+        var encryptedHN = CryptographyHelper.Encrypt("107");
+        var encryptedCity = CryptographyHelper.Encrypt("Rotterdam");
+        var encryptedZip = CryptographyHelper.Encrypt("0000AA");
+        var encryptedPhone = CryptographyHelper.Encrypt("33445566");
+        var encryptedLicense = CryptographyHelper.Encrypt("7863476537683324");
         //Don't Forget to Encrypt Usernames, names, and Addresses later. 
-        DatabaseHelper.ExecuteStatement(@"
+        DatabaseHelper.ExecuteStatement($@"
             INSERT INTO Traveler(Id, 
-            Username, 
-            PasswordHash, 
             FirstName, 
             LastName, 
             Birthday, 
@@ -181,7 +189,19 @@ public static class DBSetup
             Mail, 
             Phone, 
             LicenseNumber)
-            VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk','10-12-2001','male','Wijnhaven','107','0000AA','Rotterdam','33445566','7863476537683324','1-1-2020')
+
+            VALUES(1,
+            'kevin',
+            'Kranendonk',
+            '10-12-2001',
+            'male',
+            '{encryptedStreet}',
+            '{encryptedHN}',
+            '{encryptedZip}',
+            '{encryptedCity}',
+            '{encryptedPhone}',
+            '{encryptedLicense}',
+            '1-1-2020')
         ");
         Console.WriteLine("Inserted Seed data into Traveler.");
     }
@@ -201,9 +221,11 @@ public static class DBSetup
     }
     private static void PopulateUserTable()
     {
-        DatabaseHelper.ExecuteStatement(@"
+        var encryptedUsername1 = CryptographyHelper.Encrypt("FunnyWordMan");
+        var hashedPassword = CryptographyHelper.CreateHashValue("bepsi");
+        DatabaseHelper.ExecuteStatement($@"
         INSERT INTO User(Id,Username, PasswordHash,Role,FirstName,LastName,RegistrationDate)
-        VALUES(1, 'thefunny','598362943','ADMIN','Moo','Snuckle','18-06-2025')
+        VALUES(1, ,'{encryptedUsername1}','{hashedPassword}','ADMIN','Moo','Snuckle','18-06-2025')
         ");
         Console.WriteLine("Inserted Seed data into User.");
     }
