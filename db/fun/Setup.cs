@@ -19,8 +19,8 @@ public static class DBSetup
             InitScooterTable();
             PopulateScooterTable();
             InitTravelerTable();
-            //PopulateTravelerTable();
-            //InitUserTable();
+            PopulateTravelerTable();
+            InitUserTable();
             //PopulateUserTable();
         }
     }
@@ -168,5 +168,18 @@ public static class DBSetup
             VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk','10-12-2001','male','Wijnhaven','107','0000AA','Rotterdam','33445566','7863476537683324','1-1-2020')
         ");
         Console.WriteLine("Inserted Seed data into Traveler.");
+    }
+    private static void InitUserTable()
+    {
+        DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
+        User(
+        Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
+        Username VARCHAR(10) UNIQUE,
+        PasswordHash INT,
+        Role TEXT, 
+        FirstName TEXT, 
+        LastName TEXT,
+        registrationDate TEXT);
+        ");
     }
 }
