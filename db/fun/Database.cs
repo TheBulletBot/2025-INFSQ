@@ -29,6 +29,13 @@ public static class DatabaseHelper
         var queryCommand = new SqliteCommand(query);
         return Query<T>(queryCommand);
     }
+
+    /// <summary>
+    /// Performs a Query to the Database that automatically enters into JSON C# object
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="query"></param>
+    /// <returns></returns>
     public static List<T> Query<T>(SqliteCommand query)
     {
         using (var connection = new SqliteConnection(readString))

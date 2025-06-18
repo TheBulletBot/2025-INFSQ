@@ -55,3 +55,10 @@ public class SuperAdmin : Admin
 
     }
 }
+
+enum Role : int
+{
+    SERVICEENGINEER = 3,
+    ADMIN = 2,
+    SUPERADMIN = 1
+}
