@@ -13,41 +13,65 @@ public class ServiceEngineer : User
     }
 
     public override void Menu()
+{
+    string[] options = {
+        "Change password",
+        "Edit scooter attributes",
+        "Search scooter",
+        "Return"
+    };
+
+    int selection = 0;
+    ConsoleKey key;
+
+    while (true)
     {
-        while (true)
+        Console.Clear();
+        Console.WriteLine($"=== Service Engineer Menu ({Username}) ===");
+
+        for (int i = 0; i < options.Length; i++)
         {
-            Console.Clear();
-            Console.WriteLine($"=== Service Engineer Menu ({Username}) ===");
-            Console.WriteLine("1. Change password");
-            Console.WriteLine("2. Edit scooter attributes");
-            Console.WriteLine("3. Search scooter");
-            Console.WriteLine("4. Return");
-
-            Console.Write("Pick an option: ");
-            string input = Console.ReadLine();
-
-            switch (input)
+            if (i == selection)
             {
-                case "1":
+                Console.BackgroundColor = ConsoleColor.Gray;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine($"> {options[i]}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.WriteLine($"  {options[i]}");
+            }
+        }
+
+        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+        key = keyInfo.Key;
+
+        if (key == ConsoleKey.UpArrow)
+            selection = (selection - 1 + options.Length) % options.Length;
+        else if (key == ConsoleKey.DownArrow)
+            selection = (selection + 1) % options.Length;
+        else if (key == ConsoleKey.Enter)
+        {
+            switch (selection)
+            {
+                case 0:
                     ChangePassword();
                     break;
-                case "2":
+                case 1:
                     ChangeScooter();
                     break;
-                case "3":
+                case 2:
                     SearchScooter();
                     break;
-                case "4":
+                case 3:
                     return;
-                default:
-                    Console.WriteLine("Invalid choice");
-                    Console.ReadKey();
-                    break;
             }
         }
     }
+}
 
-    private void ChangePassword()
+    protected void ChangePassword()
     {
         Console.Write("Enter your new password: ");
         string password = Console.ReadLine();
@@ -56,12 +80,12 @@ public class ServiceEngineer : User
         Console.ReadKey();
     }
 
-    private void ChangeScooter()
+    protected void ChangeScooter()
     {
         
     }
 
-    private void SearchScooter()
+    protected void SearchScooter()
     {
         
     }

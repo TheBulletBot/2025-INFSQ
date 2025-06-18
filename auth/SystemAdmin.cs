@@ -4,58 +4,90 @@
 
     public override void Menu()
     {
-        while (true)
+    string[] options = {
+        "Change password",
+        "Edit scooter attributes",
+        "Search scooter",
+        "View all users",
+        "Add new Service Engineer",
+        "Update Service Engineer",
+        "Delete Service Engineer",
+        "Reset Service Engineer password",
+        "Update own profile",
+        "Delete own account",
+        "Backup system",
+        "Restore backup with code",
+        "View logs",
+        "Add new Traveller",
+        "Update Traveller info",
+        "Delete Traveller",
+        "Add new Scooter",
+        "Update Scooter info",
+        "Delete Scooter",
+        "Search Traveller",
+        "Return"
+    };
+
+    int selection = 0;
+    ConsoleKey key;
+
+    while (true)
+    {
+        Console.Clear();
+        Console.WriteLine($"=== System Administrator Menu ({Username}) ===");
+
+        for (int i = 0; i < options.Length; i++)
         {
-            Console.Clear();
-            Console.WriteLine("=== System Admin Menu ===");
-            Console.WriteLine("1. List Users and Roles");
-            Console.WriteLine("2. Add Service Engineer");
-            Console.WriteLine("3. Update Service Engineer");
-            Console.WriteLine("4. Delete Service Engineer");
-            Console.WriteLine("5. Reset Service Engineer Password");
-            Console.WriteLine("6. Update My Profile");
-            Console.WriteLine("7. Delete My Account");
-            Console.WriteLine("8. Backup System");
-            Console.WriteLine("9. Restore System (Code Required)");
-            Console.WriteLine("10. View Logs");
-            Console.WriteLine("11. Add Traveller");
-            Console.WriteLine("12. Update Traveller");
-            Console.WriteLine("13. Delete Traveller");
-            Console.WriteLine("14. Add Scooter");
-            Console.WriteLine("15. Update Scooter");
-            Console.WriteLine("16. Delete Scooter");
-            Console.WriteLine("17. Search Traveller");
-            Console.WriteLine("0. Exit");
-
-            Console.Write("Choose an option: ");
-            var key = Console.ReadLine();
-            switch (key)
+            if (i == selection)
             {
-                case "1": ListUsersAndRoles(); break;
-                case "2": AddServiceEngineer(); break;
-                case "3": UpdateServiceEngineer(); break;
-                case "4": DeleteServiceEngineer(); break;
-                case "5": ResetServiceEngineerPassword(); break;
-                case "6": UpdateMyProfile(); break;
-                case "7": DeleteMyAccount(); return;
-                case "8": BackupSystem(); break;
-                case "9": RestoreSystem(); break;
-                case "10": ViewLogs(); break;
-                case "11": AddTraveller(); break;
-                case "12": UpdateTraveller(); break;
-                case "13": DeleteTraveller(); break;
-                case "14": AddScooter(); break;
-                case "15": UpdateScooter(); break;
-                case "16": DeleteScooter(); break;
-                case "17": SearchTraveller(); break;
-                case "0": return;
-                default: Console.WriteLine("Invalid option"); break;
+                Console.BackgroundColor = ConsoleColor.Gray;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine($"> {options[i]}");
+                Console.ResetColor();
             }
+            else
+            {
+                Console.WriteLine($"  {options[i]}");
+            }
+        }
 
-            Console.WriteLine("Press any key to continue");
-            Console.ReadKey();
+        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+        key = keyInfo.Key;
+
+        if (key == ConsoleKey.UpArrow)
+            selection = (selection - 1 + options.Length) % options.Length;
+        else if (key == ConsoleKey.DownArrow)
+            selection = (selection + 1) % options.Length;
+        else if (key == ConsoleKey.Enter)
+        {
+            switch (selection)
+            {
+                case 0: ChangePassword(); break;
+                case 1: ChangeScooter(); break;
+                case 2: SearchScooter(); break;
+                case 3: ListUsersAndRoles(); break;
+                case 4: AddServiceEngineer(); break;
+                case 5: UpdateServiceEngineer(); break;
+                case 6: DeleteServiceEngineer(); break;
+                case 7: ResetServiceEngineerPassword(); break;
+                case 8: UpdateMyProfile(); break;
+                case 9: DeleteMyAccount(); break;
+                case 10: BackupSystem(); break;
+                case 11: RestoreSystem(); break;
+                case 12: ViewLogs(); break;
+                case 13: AddTraveller(); break;
+                case 14: UpdateTraveller(); break;
+                case 15: DeleteTraveller(); break;
+                case 16: AddScooter(); break;
+                case 17: UpdateScooter(); break;
+                case 18: DeleteScooter(); break;
+                case 19: SearchTraveller(); break;
+                case 20: return;
+            }
         }
     }
+}
+    
 
     private void ListUsersAndRoles()
     {
