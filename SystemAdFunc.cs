@@ -371,6 +371,8 @@ public class SystemADFunc
 
 
 
+
+
     private string HashPassword(string password)
     {
         using (SHA256 sha = SHA256.Create())
@@ -393,6 +395,7 @@ public class SystemADFunc
             return Convert.ToBase64String(encrypted);
         }
     }
+
 
 
 }

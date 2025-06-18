@@ -1,10 +1,3 @@
-using System.Data.Entity.Core.Common.CommandTrees;
-
-class Program
-{
-    public static void Main(string[] args)
-    {
-        DBSetup.CreateDBFile();
-        DBSetup.SetupDB();
-    }
-}
+﻿// See https://aka.ms/new-console-template for more information
+DBSetup.SetupDB();
+Login.LoginScreen();
