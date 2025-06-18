@@ -1,3 +1,5 @@
+using Microsoft.Data.Sqlite;
+
 public static class Login
 {
 
@@ -12,5 +14,14 @@ public static class Login
         System.Console.WriteLine($"DEBUG: Username = {username}; PasswordHash = {password}");
 
         //fetch User with username = 
+        var baseQueryString = @"SELECT * FROM User u WHERE u.Username = @username";
+        var queryCommand = new SqliteCommand(baseQueryString);
+        queryCommand.Parameters.Add(new SqliteParameter("@username", username));
+        var the = DatabaseHelper.Query<DBUser>(queryCommand);
+        if (the.Count > 0)
+        {
+            System.Console.WriteLine(the[0].Username);
+        }
+
     }
 }

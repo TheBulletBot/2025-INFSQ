@@ -9,26 +9,35 @@ public static class DatabaseHelper
     private static string readString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadOnly,
-            DataSource = "INFSQScooterBackend.db"
+            DataSource = "../../../db/db/INFSQScooterBackend.db"
         }.ToString();
     
     private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadWriteCreate,
-            DataSource = "INFSQScooterBackend.db"
+            DataSource = "../../../db/db/INFSQScooterBackend.db"
         }.ToString();
-    public static List<T> Query<T>(string queryString)
+
+    /// <summary>
+    /// DO NOT USE THIS VERSION OF THE FUNCTION IF YOU CAN AVOID IT. THIS IS UNSAFE. USE THE ONE THAT TAKES SQLITECOMMAND INSTEAD.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="query"></param>
+    /// <returns></returns>
+    public static List<T> Query<T>(string query)
+    {
+        var queryCommand = new SqliteCommand(query);
+        return Query<T>(queryCommand);
+    }
+    public static List<T> Query<T>(SqliteCommand query)
     {
         using (var connection = new SqliteConnection(readString))
         {
             connection.Open();
 
-            var command = connection.CreateCommand();
-            command.CommandText =
-            queryString;
+            query.Connection = connection;
 
-
-            using (SqliteDataReader reader = command.ExecuteReader())
+            using (SqliteDataReader reader = query.ExecuteReader())
             {
                 List<string> result = new();
                 while (reader.Read())
