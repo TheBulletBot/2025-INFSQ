@@ -32,7 +32,7 @@ public static class DBSetup
             //PopulateUserTable();
         }
     }
-    private static void CreateDBFile()
+    public static void CreateDBFile()
     {
         File.Create("db/db/INFSQScooterBackend.db");
     }
