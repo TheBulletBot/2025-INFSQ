@@ -225,7 +225,7 @@ public static class DBSetup
         var hashedPassword = CryptographyHelper.CreateHashValue("bepsi");
         DatabaseHelper.ExecuteStatement($@"
         INSERT INTO User(Id,Username, PasswordHash,Role,FirstName,LastName,RegistrationDate)
-        VALUES(1, ,'{encryptedUsername1}','{hashedPassword}','ADMIN','Moo','Snuckle','18-06-2025')
+        VALUES(1,'{encryptedUsername1}','{hashedPassword}','ADMIN','Moo','Snuckle','18-06-2025')
         ");
         Console.WriteLine("Inserted Seed data into User.");
     }
