@@ -5,35 +5,49 @@ using System.IO;
 
 public static class DBSetup
 {
+    private static string GetDbPath()
+{
+    return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "db", "db", "INFSQScooterBackend.db"));
+}
+
     private static string ConnectionString = new SqliteConnectionStringBuilder()
     {
         Mode = SqliteOpenMode.ReadWriteCreate,
-        DataSource = Path.Combine("db", "db", "INFSQScooterBackend.db")
+        DataSource = "INFSQScooterBackend.db"
     }.ToString();
 
     public static void SetupDB()
     {
-        string folder = Path.Combine("db", "db");
-        string dbPath = Path.Combine(folder, "INFSQScooterBackend.db");
-
-        if (!Directory.Exists(folder))
+        if (!File.Exists("db/db/INFSQScooterBackend.db"))
         {
-            Directory.CreateDirectory(folder);
-            Console.WriteLine("📁 Map aangemaakt: " + folder);
+            CreateDBFile();
         }
-
-        if (!File.Exists(dbPath))
+        if (IsDatabaseEmpty())
         {
-            File.Create(dbPath).Close();
-            Console.WriteLine("✅ Databasebestand aangemaakt: " + dbPath);
+            InitScooterTable();
+            PopulateScooterTable();
+            InitTravelerTable();
+            PopulateTravelerTable();
+            InitUserTable();
+            //PopulateUserTable();
         }
-
-        InitScooterTable();
-        InitTravelerTable();
-        PopulateScooterTable();
-        // PopulateTravelerTable(); // Optioneel
     }
-
+    private static void CreateDBFile()
+    {
+        File.Create("db/db/INFSQScooterBackend.db");
+    }
+    private static bool IsDatabaseEmpty()
+    {
+        var scooterContents = DatabaseHelper.QueryAsString("SELECT * FROM Scooter");
+        var userContents = DatabaseHelper.QueryAsString("SELECT * FROM User");
+        var travelerContents = DatabaseHelper.QueryAsString("SELECT * FROM Traveler");
+        if (scooterContents.Count == 0 || userContents.Count == 0 || travelerContents.Count == 0)
+            return true;
+        else
+        {
+            return false;
+        }
+    }
     private static void InitScooterTable()
     {
         string queryString = @"CREATE TABLE IF NOT EXISTS Scooter(
@@ -113,21 +127,24 @@ public static class DBSetup
 
     private static void PopulateTravelerTable()
     {
-        string query = @"INSERT INTO Traveller (
-            Username, PasswordHash, FirstName, LastName, Birthday, Gender,
-            Street, HouseNumber, ZipCode, City, Mail, Phone, LicenseNumber, RegistrationDate
-        ) VALUES (
-            'FunnyWordMan', 'hashedpass123', 'Kevin', 'Kranendonk', '2001-12-10', 'male',
-            'Wijnhaven', '107', '0000AA', 'Rotterdam', 'test@mail.com', '33445566', 'AB1234567', '2020-01-01'
-        );";
-
-        using var connection = new SqliteConnection(ConnectionString);
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = query;
-        command.ExecuteNonQuery();
-
-        Console.WriteLine("✅ Traveller testdata toegevoegd.");
+        //Don't Forget to Encrypt Usernames, names, and Addresses later. 
+        DatabaseHelper.ExecuteStatement(@"
+            INSERT INTO Traveler(Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender, Street, HouseNumber, ZipCode, City, Main, Phone, LicenseNumber)
+            VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk','10-12-2001','male','Wijnhaven','107','0000AA','Rotterdam','33445566','7863476537683324','1-1-2020')
+        ");
+        Console.WriteLine("Inserted Seed data into Traveler.");
+    }
+    private static void InitUserTable()
+    {
+        DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
+        User(
+        Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
+        Username VARCHAR(10) UNIQUE,
+        PasswordHash INT,
+        Role TEXT, 
+        FirstName TEXT, 
+        LastName TEXT,
+        registrationDate TEXT);
+        ");
     }
 }
