@@ -1,7 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic;
 using SQLitePCL;
-
 public static class DBSetup
 {
     private static string ConnectionString = new SqliteConnectionStringBuilder()

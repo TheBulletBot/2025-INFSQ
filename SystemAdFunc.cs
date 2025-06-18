@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using ScooterBackend;
 
 
 public class SystemADFunc
@@ -132,25 +133,73 @@ public class SystemADFunc
         Console.WriteLine(" Je account is bijgewerkt.");
     }
 
-    public void DeleteOwnAccount(string username)
-    {
+        public void DeleteOwnAccount(string username)
+        {
 
-        // kan nu alle accounts nog verwijderen 
+            // kan nu alle accounts nog verwijderen 
+            using (var conn = new SQLiteConnection(connection))
+            {
+                conn.Open();
+                string sql = "DELETE FROM User WHERE Username = @Username";
+
+                using (var cmd = new SQLiteCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Username", username);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            Console.WriteLine(" Je account is verwijderd.");
+        }
+
+    public void SearchAndPrintTravellers(string searchKey)
+    {
         using (var conn = new SQLiteConnection(connection))
         {
             conn.Open();
-            string sql = "DELETE FROM User WHERE Username = @Username";
+            string sql = @"SELECT * FROM Traveller
+                        WHERE FirstName LIKE @Search
+                            OR LastName LIKE @Search
+                            OR Phone LIKE @Search
+                            OR Email LIKE @Search
+                            OR LicenseNumber LIKE @Search";
 
             using (var cmd = new SQLiteCommand(sql, conn))
             {
-                cmd.Parameters.AddWithValue("@Username", username);
-                cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@Search", "%" + searchKey + "%");
+
+                using (var reader = cmd.ExecuteReader())
+                {
+                    Console.WriteLine("\n--- Zoekresultaten ---\n");
+
+                    bool found = false;
+                    while (reader.Read())
+                    {
+                        found = true;
+                        Console.WriteLine($"ID: {reader["Id"]}");
+                        Console.WriteLine($"Naam: {reader["FirstName"]} {reader["LastName"]}");
+                        Console.WriteLine($"Geboortedatum: {reader["Birthday"]}");
+                        Console.WriteLine($"Geslacht: {reader["Gender"]}");
+                        Console.WriteLine($"Adres: {reader["StreetName"]} {reader["HouseNumber"]}, {reader["ZipCode"]} {reader["City"]}");
+                        Console.WriteLine($"Email: {reader["Email"]}");
+                        Console.WriteLine($"Telefoon: {reader["Phone"]}");
+                        Console.WriteLine($"Rijbewijs: {reader["LicenseNumber"]}");
+                        Console.WriteLine("--------------------------\n");
+                    }
+
+                    if (!found)
+                    {
+                        Console.WriteLine("⚠️ Geen reizigers gevonden met die zoekterm.");
+                    }
+                }
             }
         }
-        Console.WriteLine(" Je account is verwijderd.");
     }
+
+
+
     public void ShowAllUsersAndRoles()
     {
+
         string query = "SELECT Username, Role FROM User ORDER BY Username ASC";
         var users = DatabaseHelper.Query<User>(query);
 

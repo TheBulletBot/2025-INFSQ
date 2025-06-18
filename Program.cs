@@ -56,12 +56,11 @@
                     return;
 
                 case "3":
-                    Console.Write("Zoekterm: ");
-                    string zoek = Console.ReadLine();
-                    var reizigers = system.SearchTraveller(zoek);
-                    foreach (var r in reizigers)
-                        Console.WriteLine($"Naam: {r.Name}, ID: {r.CustomerID}");
-                    break;
+                Console.Write("Zoekterm: ");
+                string zoek = Console.ReadLine();
+                system.SearchAndPrintTravellers(zoek); // nieuwe methode aanroepen
+                break;
+
 
                 case "4":
                     Console.Write("Merk: "); var merk = Console.ReadLine();
