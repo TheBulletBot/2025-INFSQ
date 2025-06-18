@@ -1,1 +1,1 @@
-﻿
+﻿DBSetup.SetupDB();

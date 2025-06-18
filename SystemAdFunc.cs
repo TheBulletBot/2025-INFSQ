@@ -10,7 +10,7 @@ public class SystemADFunc
 {
     private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");
     private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");
-    private readonly string connection = "Data Source=C:\\Users\\rensg\\OneDrive\\Documenten\\GitHub\\2025-INFSQ-1\\ScooterBackend\\db\\db\\INFSQScooterBackend.db";
+    private readonly string connection = "Data Source=C:\\Users\\rensg\\OneDrive\\Documenten\\GitHub\\2025-INFSQ-1\\ScooterBackend\\db\\fun\\INFSQScooterBackend.db";
 
     public void AddEngineer(string username, string password)
     {
@@ -24,9 +24,10 @@ public class SystemADFunc
                VALUES (@Id, @Username, @PasswordHash, @Role)";
 
 
+
             using (var cmd = new SQLiteCommand(sql, conn))
             {
-                cmd.Parameters.AddWithValue("@Id", Guid.NewGuid().ToString());
+               cmd.Parameters.AddWithValue("@Id", Guid.NewGuid().ToString());
                 cmd.Parameters.AddWithValue("@Username", username);
                 cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
                 cmd.Parameters.AddWithValue("@Role", "Service Engineer");

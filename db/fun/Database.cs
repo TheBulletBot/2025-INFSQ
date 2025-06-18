@@ -12,14 +12,14 @@ namespace ScooterBackend
         private static string readString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadOnly,
-            DataSource = @"C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-2\db\db\INFSQScooterBackend.db"
+            DataSource = @"db/db/INFSQScooterBackend.db"
 
         }.ToString();
 
         private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadWriteCreate,
-           DataSource = @"C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-2\db\db\INFSQScooterBackend.db"
+           DataSource = @"db/db/INFSQScooterBackend.db"
 
         }.ToString();
         public static List<T> Query<T>(string queryString)
