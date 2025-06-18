@@ -9,9 +9,9 @@ public class Scooter
     public int TargetMax { get; }
     public int TargetMin { get; }
     public string Location { get; }
-    public bool OutOfService { get; }
+    public int OutOfService { get; }
     public float Mileage { get; }
-    public DateOnly LastMaintenance { get; }
+    public string LastMaintenance { get; }
 
     public Scooter(
         string SerialNumber,
@@ -23,9 +23,9 @@ public class Scooter
         int TargetMax,
         int TargetMin,
         string Location,
-        bool OutOfService,
+        int OutOfService,
         float Mileage,
-        DateOnly LastMaintenance)
+        string LastMaintenance)
     {
         this.SerialNumber = SerialNumber;
         this.Brand = Brand;
