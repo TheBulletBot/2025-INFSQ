@@ -6,16 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 public static class DatabaseHelper
 {
+    public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"../../../db/db/INFSQScooterBackend.db");
     private static string readString = new SqliteConnectionStringBuilder()
-        {
-            Mode = SqliteOpenMode.ReadOnly,
-            DataSource = "../../../db/db/INFSQScooterBackend.db"
-        }.ToString();
+    {
+        Mode = SqliteOpenMode.ReadOnly,
+        DataSource = DatabaseHelper.DatabasePath
+    }.ToString();
     
     private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadWriteCreate,
-            DataSource = "../../../db/db/INFSQScooterBackend.db"
+            DataSource = DatabaseHelper.DatabasePath
         }.ToString();
 
     /// <summary>
@@ -29,6 +30,13 @@ public static class DatabaseHelper
         var queryCommand = new SqliteCommand(query);
         return Query<T>(queryCommand);
     }
+
+    /// <summary>
+    /// Performs a Query to the Database that automatically enters into JSON C# object
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="query"></param>
+    /// <returns></returns>
     public static List<T> Query<T>(SqliteCommand query)
     {
         using (var connection = new SqliteConnection(readString))
