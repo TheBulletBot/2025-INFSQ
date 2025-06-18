@@ -11,26 +11,11 @@ public abstract class User
     public abstract void Menu();
 }
 
-public class ServiceEngineer : User
+
+
+public class SystemAdmin : ServiceEngineer
 {
-    public ServiceEngineer(string username, string role) : base(username, role)
-    {
-
-    }
-    //Insert Menus for Service Engineers here.
-    public override void Menu()
-    {
-        
-    }
-    //Insert all functions that Service Engineers can perform here. 
-
-
-
-}
-
-public class Admin : ServiceEngineer
-{
-    public Admin(string username, string role) : base(username, role)
+    public SystemAdmin(string username, string role) : base(username, role)
     {
 
     }
@@ -43,7 +28,7 @@ public class Admin : ServiceEngineer
     //Insert all functions that Only Admins can perform here
 }
 
-public class SuperAdmin : Admin
+public class SuperAdmin : SystemAdmin
 {
     public SuperAdmin(string username, string role) : base(username, role)
     {
