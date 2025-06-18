@@ -1,7 +1,14 @@
+using System;
+using System.Data.SQLite;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+
+
 public class SystemADFunc
 {
-    private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");  
-    private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");  
+    private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");
+    private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");
     private readonly string connection = "Data Source=C:\\Users\\rensg\\OneDrive\\Documenten\\GitHub\\2025-INFSQ-1\\ScooterBackend\\db\\db\\INFSQScooterBackend.db";
 
     public void AddEngineer(string username, string password)
@@ -182,21 +189,117 @@ public class SystemADFunc
         }
     }
 
-    public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalrange, string location, int outOfService, int milage, DateTime Lmaintenance)
+    public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
         using (var conn = new SQLiteConnection(connection))
         {
             conn.Open();
-            string sql = @" INSERT INTO Scooter 
-                         (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService      ";
+            string sql = @"INSERT INTO Scooter 
+                          (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
+                          VALUES
+                          (@Brand, @Model, @TopSpeed, @BatteryCapacity, @StateOfCharge, @TargetRange, @Location, @OutOfService, @Mileage, @LastMaintenance)";
+
+            using (var cmd = new SQLiteCommand(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@Brand", brand);
+                cmd.Parameters.AddWithValue("@Model", model);
+                cmd.Parameters.AddWithValue("@TopSpeed", topSpeed);
+                cmd.Parameters.AddWithValue("@BatteryCapacity", battery);
+                cmd.Parameters.AddWithValue("@StateOfCharge", charge);
+                cmd.Parameters.AddWithValue("@TargetRange", totalRange);
+                cmd.Parameters.AddWithValue("@Location", location);
+                cmd.Parameters.AddWithValue("@OutOfService", outOfService);
+                cmd.Parameters.AddWithValue("@Mileage", mileage);
+                cmd.Parameters.AddWithValue("@LastMaintenance", lastMaintenance);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
+    public void UpdateScooter(int scooterId, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
+    {
+        using (var conn = new SQLiteConnection(connection))
+        {
+            conn.Open();
+            string sql = @"UPDATE Scooter SET 
+                            Brand = @Brand,
+                            Model = @Model,
+                            TopSpeed = @TopSpeed,
+                            BatteryCapacity = @BatteryCapacity,
+                            StateOfCharge = @StateOfCharge,
+                            TargetRange = @TargetRange,
+                            Location = @Location,
+                            OutOfService = @OutOfService,
+                            Mileage = @Mileage,
+                            LastMaintenance = @LastMaintenance
+                        WHERE Id = @Id";
+
+            using (var cmd = new SQLiteCommand(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@Brand", brand);
+                cmd.Parameters.AddWithValue("@Model", model);
+                cmd.Parameters.AddWithValue("@TopSpeed", topSpeed);
+                cmd.Parameters.AddWithValue("@BatteryCapacity", battery);
+                cmd.Parameters.AddWithValue("@StateOfCharge", charge);
+                cmd.Parameters.AddWithValue("@TargetRange", totalRange);
+                cmd.Parameters.AddWithValue("@Location", location);
+                cmd.Parameters.AddWithValue("@OutOfService", outOfService);
+                cmd.Parameters.AddWithValue("@Mileage", mileage);
+                cmd.Parameters.AddWithValue("@LastMaintenance", lastMaintenance);
+                cmd.Parameters.AddWithValue("@Id", scooterId);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
+
+    public void DeleteScooter(int scooterId)
+    {
+        using (var conn = new SQLiteConnection(connection))
+        {
+            conn.Open();
+            string sql = "DELETE FROM Scooter WHERE Id = @Id";
+
+            using (var cmd = new SQLiteCommand(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@Id", scooterId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
+
+   
+    
+    public string Login(string username, string password)
+    {
+        string passwordHash = HashPassword(password);
+
+        using (var conn = new SQLiteConnection(connection))
+        {
+            conn.Open();
+            string sql = "SELECT Role FROM User WHERE Username = @Username AND PasswordHash = @PasswordHash";
+
+            using (var cmd = new SQLiteCommand(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@Username", username);
+                cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+
+                object result = cmd.ExecuteScalar();
+
+                return result?.ToString(); // Geeft "Service Engineer" of "Admin" terug, of null
+            }
         }
     }
 
 
 
 
-        
-    
+
+
+
+
+
+
 
 
 
@@ -238,6 +341,6 @@ public class SystemADFunc
             return Convert.ToBase64String(encrypted);
         }
     }
-    
+
 
 }
