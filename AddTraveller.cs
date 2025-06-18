@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System;
+
 using System.Data.SQLite;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ScooterBackend;
+
 public class TravelerFunc
 {
     private readonly string _connectionString =
