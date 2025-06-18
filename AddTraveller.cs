@@ -3,7 +3,6 @@ using System.Data.SQLite;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-
 public class TravelerFunc
 {
     private readonly string _connectionString =
@@ -107,3 +106,4 @@ public class TravelerFunc
         }
     }
 }
+*/
