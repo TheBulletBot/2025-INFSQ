@@ -1,7 +1,10 @@
+using System.Data.SQLite;
+using System.Security.Cryptography;
+using System.Text;
 public class SystemADFunc
 {
-    private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");  
-    private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");  
+    private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");
+    private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");
     private readonly string connection = "Data Source=C:\\Users\\rensg\\OneDrive\\Documenten\\GitHub\\2025-INFSQ-1\\ScooterBackend\\db\\db\\INFSQScooterBackend.db";
 
     public void AddEngineer(string username, string password)
@@ -184,14 +187,14 @@ public class SystemADFunc
 
     public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalrange, string location, int outOfService, int milage, DateTime Lmaintenance)
     {
-        
+
     }
 
 
 
 
-        
-    
+
+
 
 
 
@@ -233,6 +236,6 @@ public class SystemADFunc
             return Convert.ToBase64String(encrypted);
         }
     }
-    
+
 
 }

@@ -9,13 +9,13 @@ public static class DatabaseHelper
     private static string readString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadOnly,
-            DataSource = "INFSQScooterBackend.db"
+            DataSource = "../../../db/db/INFSQScooterBackend.db"
         }.ToString();
     
     private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
         {
             Mode = SqliteOpenMode.ReadWriteCreate,
-            DataSource = "INFSQScooterBackend.db"
+            DataSource = "../../../db/db/INFSQScooterBackend.db"
         }.ToString();
 
     /// <summary>

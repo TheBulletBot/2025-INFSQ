@@ -6,13 +6,16 @@ public static class DBSetup
     private static string ConnectionString = new SqliteConnectionStringBuilder()
     {
         Mode = SqliteOpenMode.ReadWriteCreate,
-        DataSource = "INFSQScooterBackend.db"
+        DataSource = "../../../db/db/INFSQScooterBackend.db"
     }.ToString();
     public static void SetupDB()
     {
-        if (!File.Exists("db/db/INFSQScooterBackend.db"))
+        if (!File.Exists("../../../db/db/INFSQScooterBackend.db"))
         {
             CreateDBFile();
+            InitScooterTable();
+            InitTravelerTable();
+            InitUserTable();
         }
         if (IsDatabaseEmpty())
         {
@@ -21,12 +24,12 @@ public static class DBSetup
             InitTravelerTable();
             PopulateTravelerTable();
             InitUserTable();
-            //PopulateUserTable();
+            PopulateUserTable();
         }
     }
     private static void CreateDBFile()
     {
-        File.Create("db/db/INFSQScooterBackend.db");
+        File.Create("../../../db/db/INFSQScooterBackend.db");
     }
     private static bool IsDatabaseEmpty()
     {
@@ -139,7 +142,7 @@ public static class DBSetup
     }
     private static void InitTravelerTable()
     {
-        DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS Traveller(
+        DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS Traveler(
             Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
             Username VARCHAR(10) UNIQUE,
             PasswordHash INT,
@@ -164,7 +167,20 @@ public static class DBSetup
     {
         //Don't Forget to Encrypt Usernames, names, and Addresses later. 
         DatabaseHelper.ExecuteStatement(@"
-            INSERT INTO Traveler(Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender, Street, HouseNumber, ZipCode, City, Main, Phone, LicenseNumber)
+            INSERT INTO Traveler(Id, 
+            Username, 
+            PasswordHash, 
+            FirstName, 
+            LastName, 
+            Birthday, 
+            Gender, 
+            Street, 
+            HouseNumber, 
+            ZipCode, 
+            City, 
+            Mail, 
+            Phone, 
+            LicenseNumber)
             VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk','10-12-2001','male','Wijnhaven','107','0000AA','Rotterdam','33445566','7863476537683324','1-1-2020')
         ");
         Console.WriteLine("Inserted Seed data into Traveler.");
@@ -179,7 +195,16 @@ public static class DBSetup
         Role TEXT, 
         FirstName TEXT, 
         LastName TEXT,
-        registrationDate TEXT);
+        RegistrationDate TEXT);
         ");
+        Console.WriteLine("Created User Table.");
+    }
+    private static void PopulateUserTable()
+    {
+        DatabaseHelper.ExecuteStatement(@"
+        INSERT INTO User(Id,Username, PasswordHash,Role,FirstName,LastName,RegistrationDate)
+        VALUES(1, 'thefunny','598362943','ADMIN','Moo','Snuckle','18-06-2025')
+        ");
+        Console.WriteLine("Inserted Seed data into User.");
     }
 }
