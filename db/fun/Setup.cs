@@ -4,10 +4,10 @@ using SQLitePCL;
 public static class DBSetup
 {
     private static string ConnectionString = new SqliteConnectionStringBuilder()
-        {
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            DataSource = "INFSQScooterBackend.db"
-        }.ToString();
+    {
+        Mode = SqliteOpenMode.ReadWriteCreate,
+        DataSource = "INFSQScooterBackend.db"
+    }.ToString();
     public static void SetupDB()
     {
         if (!File.Exists("db/db/INFSQScooterBackend.db"))
@@ -70,7 +70,54 @@ public static class DBSetup
     }
     public static void PopulateScooterTable()
     {
-        string queryString = @"INSERT INTO Scooter(SerialNumber,Brand,Model,TopSpeed,BatteryCapacity,StateOfCharge,TargetMin,TargetMax,Location,OutOfService,LastService) VALUES(2,'brandname','modelname',30,100,70,30,80,'here',0,1762025);";
+        string queryString = @"INSERT INTO Scooter(
+                    SerialNumber,
+                    Brand,
+                    Model,
+                    TopSpeed,
+                    BatteryCapacity,
+                    StateOfCharge,
+                    TargetMin,
+                    TargetMax,
+                    Location,
+                    OutOfService,
+                    LastService) 
+                    
+                    VALUES(
+                    2,
+                    'brandname',
+                    'modelname',
+                    30,
+                    100,
+                    70,
+                    30,
+                    80,
+                    'here',
+                    0,
+                    1762025),
+                    (3,
+                    'Hyundai',
+                    'R14',
+                    30,
+                    100,
+                    80,
+                    30,
+                    80,
+                    '19.94636:162.84792',
+                    0,
+                    1-6-2025),
+                    (4,
+                    'Hyundai',
+                    'R14',
+                    30,
+                    100,
+                    40,
+                    30,
+                    80,
+                    '19.94636:162.84792',
+                    0,
+                    1-6-2025);";
+
         using (var connection = new SqliteConnection(ConnectionString))
         {
             connection.Open();
@@ -103,8 +150,17 @@ public static class DBSetup
             Phone VARCHAR (8),
             LicenseNumber UNIQUE NOT NULL
             );");
-        
+
         System.Console.WriteLine("Successfully Created Table");
 
+    }
+    private static void PopulateTravelerTable()
+    {
+        //Don't Forget to Encrypt Usernames, names, and Addresses later. 
+        DatabaseHelper.ExecuteStatement(@"
+            INSERT INTO Traveler(Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender, Street, HouseNumber, ZipCode, City, Main, Phone, LicenseNumber)
+            VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk',)
+        ");
+        Console.WriteLine("Inserted Seed data into Traveler.");
     }
 }
