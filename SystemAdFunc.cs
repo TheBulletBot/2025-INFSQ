@@ -51,9 +51,9 @@ public class SystemADFunc
                 int rowsAffected = cmd.ExecuteNonQuery();
 
                 if (rowsAffected > 0)
-                    Console.WriteLine("✅ Service Engineer bijgewerkt.");
+                    Console.WriteLine(" Service Engineer bijgewerkt.");
                 else
-                    Console.WriteLine("❌ Gebruiker niet gevonden of geen Service Engineer.");
+                    Console.WriteLine(" Gebruiker niet gevonden of geen Service Engineer.");
             }
         }
     }
@@ -95,9 +95,9 @@ public class SystemADFunc
                 int rowsAffected = cmd.ExecuteNonQuery();
 
                 if (rowsAffected > 0)
-                    Console.WriteLine($"✅ Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
+                    Console.WriteLine($" Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
                 else
-                    Console.WriteLine("❌ Gebruiker niet gevonden of is geen Service Engineer.");
+                    Console.WriteLine(" Gebruiker niet gevonden of is geen Service Engineer.");
             }
         }
     }
@@ -122,7 +122,7 @@ public class SystemADFunc
             }
         }
 
-        Console.WriteLine("✅ Je account is bijgewerkt.");
+        Console.WriteLine(" Je account is bijgewerkt.");
     }
 
     public void DeleteOwnAccount(string username)
@@ -184,7 +184,12 @@ public class SystemADFunc
 
     public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalrange, string location, int outOfService, int milage, DateTime Lmaintenance)
     {
-        
+        using (var conn = new SQLiteConnection(connection))
+        {
+            conn.Open();
+            string sql = @" INSERT INTO Scooter 
+                         (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService      ";
+        }
     }
 
 
