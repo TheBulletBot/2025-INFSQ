@@ -53,6 +53,7 @@ public static class DBSetup
             StateOfCharge INTEGER,
             TargetMin INTEGER,
             TargetMax INTEGER,
+            Mileage INTEGER,
             Location TEXT,
             OutOfService INTEGER,
             LastService DATE
@@ -81,6 +82,7 @@ public static class DBSetup
                     StateOfCharge,
                     TargetMin,
                     TargetMax,
+                    Mileage,
                     Location,
                     OutOfService,
                     LastService) 
@@ -94,6 +96,7 @@ public static class DBSetup
                     70,
                     30,
                     80,
+                    3456,
                     'here',
                     0,
                     1762025),
@@ -105,6 +108,7 @@ public static class DBSetup
                     80,
                     30,
                     80,
+                    1295,
                     '19.94636:162.84792',
                     0,
                     1-6-2025),
@@ -116,6 +120,7 @@ public static class DBSetup
                     40,
                     30,
                     80,
+                    8465,
                     '19.94636:162.84792',
                     0,
                     1-6-2025);";
@@ -150,7 +155,8 @@ public static class DBSetup
             City VARCHAR(255),
             Mail VARCHAR(255),
             Phone VARCHAR (8),
-            LicenseNumber UNIQUE NOT NULL
+            LicenseNumber TEXT UNIQUE NOT NULL,
+            RegistrationDate TEXT
             );");
 
         System.Console.WriteLine("Successfully Created Table");
@@ -161,7 +167,7 @@ public static class DBSetup
         //Don't Forget to Encrypt Usernames, names, and Addresses later. 
         DatabaseHelper.ExecuteStatement(@"
             INSERT INTO Traveler(Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender, Street, HouseNumber, ZipCode, City, Main, Phone, LicenseNumber)
-            VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk',)
+            VALUES(1,'FunnyWordMan',15637621463,'kevin','Kranendonk','10-12-2001','male','Wijnhaven','107','0000AA','Rotterdam','33445566','7863476537683324','1-1-2020')
         ");
         Console.WriteLine("Inserted Seed data into Traveler.");
     }

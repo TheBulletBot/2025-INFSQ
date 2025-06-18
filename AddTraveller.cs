@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
-
-/*
+using System;
+using System.Data.SQLite;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using ScooterBackend;
 public class TravelerFunc
 {
     private readonly string _connectionString =
         @"Data Source=C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-1\ScooterBackend\db\db\INFSQScooterBackend.db";
     private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");   // exact 16 bytes
-    private readonly byte[] _aesIV  = Encoding.UTF8.GetBytes("FEDCBA0987654321");   // exact 16 bytes
+    private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");   // exact 16 bytes
 
     public void AddTraveler(string username, string password,
         string firstName, string lastName, DateTime birthday, string gender,
@@ -27,7 +31,7 @@ public class TravelerFunc
         if (password.Length < 4)
             throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
 
-        int passwordHash = IntHashPassword(password);
+        string passwordHash = HashPassword(password);
         string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
 
         string encryptedPhone = Encrypt(phone);
@@ -67,6 +71,28 @@ public class TravelerFunc
 
         Console.WriteLine("Traveller succesvol toegevoegd.");
     }
+    private string HashPassword(string password)
+    {
+        using (SHA256 sha = SHA256.Create())
+        {
+            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hash);
+        }
+    }
+
+    private string Encrypt(string plainText)
+    {
+        using (var aes = Aes.Create())
+        {
+            aes.Key = _aesKey;
+            aes.IV = _aesIV;
+
+            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+            byte[] encrypted = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+            return Convert.ToBase64String(encrypted);
+        }
+    }
+
 
 }
-*/
