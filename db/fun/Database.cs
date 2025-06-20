@@ -115,6 +115,8 @@ public static class DatabaseHelper
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = queryString;
+                command.CommandType = System.Data.CommandType.Text;
+                command.Connection = connection;
                 command.ExecuteNonQuery();
             }
 
@@ -126,6 +128,7 @@ public static class DatabaseHelper
         using (var connection = new SQLiteConnection(modifyDBConnectionString))
         {
             connection.Open();
+            query.Connection = connection;
 
             query.ExecuteNonQuery();
 

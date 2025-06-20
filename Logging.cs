@@ -9,7 +9,7 @@ static class Logging
         var today = DateTime.Now;
         var todayDateString = today.ToString("d");
         var todayTimeString = today.ToString("T");
-        var logFilePath = Path.Combine(projectRoot, $"Logs/{today:dd-MM-yyyy}.log");
+        var logFilePath = Path.Combine(projectRoot, $"LogFIles/{today:dd-MM-yyyy}.log");
         if (!File.Exists(logFilePath))
         {
             CreateLogFile(logFilePath,todayDateString, todayTimeString, username);

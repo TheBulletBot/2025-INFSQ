@@ -228,9 +228,10 @@ public class SystemAdmin : ServiceEngineer
 
         foreach (var user in users)
         {
-            Console.WriteLine($"UserName: {user.Username,-15} | Rol: {user.Role}");
+            Console.WriteLine($"UserName: {CryptographyHelper.Decrypt(user.Username),-15} | Rol: {user.Role}");
         }
         Logging.Log(this.Username, "Show All Users", $"Displayed each user and its role", false);
+        Console.ReadKey();
     }
 
     public void AddEngineerMenu()
@@ -268,22 +269,32 @@ public class SystemAdmin : ServiceEngineer
 
     public void AddEngineer(string username, string password,string firstName, string lastName)
     {
+        //check if unique
+        var Query = new SQLiteCommand("Select * FROM User u WHERE u.Username = @username");
+        Query.Parameters.AddWithValue("@username", username);
+        var result = DatabaseHelper.Query<User>(Query);
+        if (result.Count > 0)
+        {
+            Console.WriteLine("Username already in use, Try again");
+            return;
+        }
         string passwordHash = CryptographyHelper.CreateHashValue(password);
         string encryptedUsername = CryptographyHelper.Encrypt(username);
         var registrationDate = DateTime.Now.ToString("dd-MM-yyyy");
         string encryptedFirstName = CryptographyHelper.Encrypt(firstName);
         string encryptedLastName = CryptographyHelper.Encrypt(lastName);
-        string sql = $@"INSERT INTO User (Id, Username, PasswordHash, Role,FirstName, LastName, RegistrationDate) 
-        VALUES ('{Guid.NewGuid()}', '@username', '@password', 'Service Engineer',@firstname, @lastname, @registrationdate)";
+        string sql = @"INSERT INTO User (Id, Username, PasswordHash, Role,FirstName, LastName, RegistrationDate) 
+        VALUES (@id, @username, @password, 'Service Engineer',@firstname, @lastname, @registrationdate)";
 
         var queryCommand = new SQLiteCommand(sql);
-        queryCommand.Parameters.Add(new SQLiteParameter("@username", encryptedUsername));
-        queryCommand.Parameters.Add(new SQLiteParameter("@password", passwordHash));
-        queryCommand.Parameters.Add(new SQLiteParameter("@firstname", encryptedFirstName));
-        queryCommand.Parameters.Add(new SQLiteParameter("@lastname", encryptedLastName));
-        queryCommand.Parameters.Add(new SQLiteParameter("@registrationdate", registrationDate));
+        queryCommand.Parameters.AddWithValue("@id", Guid.NewGuid());
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        queryCommand.Parameters.AddWithValue("@firstname", encryptedFirstName);
+        queryCommand.Parameters.AddWithValue("@lastname", encryptedLastName);
+        queryCommand.Parameters.AddWithValue("@registrationdate", registrationDate);
 
-        DatabaseHelper.ExecuteStatement(sql);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine("Service Engineer toegevoegd!");
     }
 
@@ -338,8 +349,11 @@ public class SystemAdmin : ServiceEngineer
 
     public void DeleteEngineer(string username)
     {
-        string sql = $"DELETE FROM User WHERE Username = '{username}' AND Role = 'Service Engineer'";
-        DatabaseHelper.ExecuteStatement(sql);
+        string sql = $"DELETE FROM User WHERE Username = @username AND Role = 'Service Engineer'";
+        var encryptedUsername = CryptographyHelper.Encrypt(username);
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine("Service Engineer verwijderd: " + username);
     }
 
@@ -361,8 +375,12 @@ public class SystemAdmin : ServiceEngineer
     {
         string tempPassword = "Temp" + new Random().Next(1000, 9999);
         string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
-        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
-        DatabaseHelper.ExecuteStatement(sql);
+        string sql = $"UPDATE User SET PasswordHash = @password WHERE Username = @username AND Role = 'Service Engineer'";
+        var encryptedUsername = CryptographyHelper.Encrypt(username);
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine($"Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
     }
 
@@ -383,7 +401,10 @@ public class SystemAdmin : ServiceEngineer
     public void DeleteOwnAccount(string username)
     {
         string sql = $"DELETE FROM User WHERE Username = '{username}'";
-        DatabaseHelper.ExecuteStatement(sql);
+        var queryCommand = new SQLiteCommand(sql);
+        var encryptedUsername = CryptographyHelper.Encrypt(username);
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine("Je account is verwijderd.");
     }
 
@@ -405,7 +426,9 @@ public class SystemAdmin : ServiceEngineer
 
     public void SearchAndPrintTravelers(string searchKey)
     {
-        string sql = $@"SELECT * FROM Traveler WHERE FirstName LIKE '%{searchKey}%' OR LastName LIKE '%{searchKey}%' OR Phone LIKE '%{searchKey}%' OR Mail LIKE '%{searchKey}%' OR LicenseNumber LIKE '%{searchKey}%'";
+        string sql = $@"SELECT * FROM Traveler WHERE FirstName LIKE @searchKey OR LastName LIKE '%{searchKey}%' OR Phone LIKE '%{searchKey}%' OR Mail LIKE '%{searchKey}%' OR LicenseNumber LIKE '%{searchKey}%'";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@searchKey", CryptographyHelper.Encrypt(searchKey));
         var travellers = DatabaseHelper.Query<Traveler>(sql);
 
         Console.WriteLine("\n--- Zoekresultaten ---\n");
@@ -556,34 +579,59 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Ongeldig rijbewijsnummer");
         if (newPassword.Length < 4)
             throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
-
+        string encryptedNewUsername = CryptographyHelper.Encrypt(newUsername);
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
 
         string encryptedPhone = CryptographyHelper.Encrypt(newPhoneNumber);
         string encryptedStreet = CryptographyHelper.Encrypt(newStreet);
         string encryptedCity = CryptographyHelper.Encrypt(newCity);
+        string encryptedNewFirstName = CryptographyHelper.Encrypt(newFirstName);
+        var encryptedNewlastName = CryptographyHelper.Encrypt(newLastName);
+        var encryptedHouseNumber = CryptographyHelper.Encrypt(newHouseNumber);
+        var encryptedZip = CryptographyHelper.Encrypt(newZipCode);
+        var encryptedMail = CryptographyHelper.Encrypt(newEmail);
+        var encryptedLicense = CryptographyHelper.Encrypt(newLicenseNumber);
 
         string oldEncryptedPhone = CryptographyHelper.Encrypt(oldPhoneNumber);
-
+        
         string sql = $@"
             UPDATE Traveler SET
-                Username = '{newUsername}',
-                PasswordHash = '{passwordHash}',
-                FirstName = '{newFirstName}',
-                LastName = '{newLastName}',
-                Birthday = '{newBirthDate:yyyy-MM-dd}',
-                Gender = '{newGender}',
-                Street = '{encryptedStreet}',
-                HouseNumber = '{newHouseNumber}',
-                ZipCode = '{newZipCode}',
-                City = '{encryptedCity}',
-                Mail = '{newEmail}',
-                Phone = '{encryptedPhone}',
-                LicenseNumber = '{newLicenseNumber}'
-            WHERE FirstName = '{oldFirstName}' AND LastName = '{oldLastName}' AND Phone = '{oldEncryptedPhone}'
+                Username = @username,
+                FirstName = @firstname,
+                LastName = @lastname,
+                Birthday = @Borth,
+                Gender = @gender,
+                Street = @Estreet,
+                HouseNumber = @EHouseNr,
+                ZipCode = @EZipcode,
+                City = @ECity,
+                Mail = @Email,
+                Phone = @Ephone,
+                LicenseNumber = @ELicense
+            WHERE FirstName = @deadname AND LastName = @deadlastname AND Phone = @oldphone
         ";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", Guid.NewGuid());
+        queryCommand.Parameters.AddWithValue("@username", newUsername);
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        queryCommand.Parameters.AddWithValue("@firstname", encryptedNewFirstName);
+        queryCommand.Parameters.AddWithValue("@lastname", encryptedNewlastName);
+        queryCommand.Parameters.AddWithValue("@Borth", newBirthDate.ToString("dd-MM-yyyy"));
+        queryCommand.Parameters.AddWithValue("@gender", newGender);
+        queryCommand.Parameters.AddWithValue("@Estreet", encryptedStreet);
+        queryCommand.Parameters.AddWithValue("@EHouseNr", encryptedHouseNumber);
+        queryCommand.Parameters.AddWithValue("@EZipcode", encryptedZip);
+        queryCommand.Parameters.AddWithValue("@ECity", encryptedCity);
+        queryCommand.Parameters.AddWithValue("@Email", encryptedMail);
+        queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
 
-        DatabaseHelper.ExecuteStatement(sql);
+        queryCommand.Parameters.AddWithValue("@ELicense", encryptedLicense);
+        queryCommand.Parameters.AddWithValue("@deadname", CryptographyHelper.Encrypt(oldFirstName));
+        queryCommand.Parameters.AddWithValue("@EPhone", CryptographyHelper.Encrypt(oldLastName));
+        queryCommand.Parameters.AddWithValue("@EPhone", oldEncryptedPhone);
+
+
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine("Traveler succesvol bijgewerkt.");
     }
 
@@ -616,7 +664,11 @@ public class SystemAdmin : ServiceEngineer
     public void DeleteTraveler(string firstName, string lastName, string phoneNumber)
     {
         string encryptedPhone = CryptographyHelper.Encrypt(phoneNumber);
-        string sql = $"DELETE FROM Traveler WHERE FirstName = '{firstName}' AND LastName = '{lastName}' AND Phone = '{encryptedPhone}'";
+        string sql = $"DELETE FROM Traveler WHERE FirstName = @firstname AND LastName = @lastname AND Phone = @Ephone";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@firstname", CryptographyHelper.Encrypt(firstName));
+        queryCommand.Parameters.AddWithValue("@lastname", CryptographyHelper.Encrypt(lastName));
+        queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine($"Traveler verwijderd: {firstName} {lastName}");
     }
@@ -707,8 +759,11 @@ public class SystemAdmin : ServiceEngineer
             INSERT INTO Scooter 
             (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
             VALUES
-            ('{brand}', '{model}', {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
+            (@brand, @model, {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
         ";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@brand", CryptographyHelper.Encrypt(brand));
+        queryCommand.Parameters.AddWithValue("@model", CryptographyHelper.Encrypt(model));
 
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine("Scooter succesvol toegevoegd.");
