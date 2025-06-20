@@ -126,6 +126,7 @@
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "Add System Admin", $"Nieuwe System Admin toegevoegd: {username}", false);
         Console.WriteLine("System Admin toegevoegd!");
     }
 
@@ -158,8 +159,9 @@
             SET Username = '{newUsername}', PasswordHash = '{passwordHash}'
             WHERE Username = '{currentUsername}' AND Role = 'System Admin'
         ";
-
+        
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "Update System Admin", $"System Admin {currentUsername} gewijzigd naar {newUsername}", false);
         Console.WriteLine("System Admin bijgewerkt (of niet gevonden).");
     }
 
@@ -187,6 +189,7 @@
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "Delete System Admin", $"System Admin verwijderd: {username}", true);
         Console.WriteLine($"System Admin verwijderd: {username}");
     }
 
@@ -218,6 +221,7 @@
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "Reset System Admin Password", $"Tijdelijk wachtwoord ingesteld voor: {username}", true);
         Console.WriteLine($"Tijdelijk wachtwoord voor {username}: {tempPassword}");
     }
     

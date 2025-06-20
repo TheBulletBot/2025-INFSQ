@@ -69,7 +69,7 @@ public class SystemAdmin : ServiceEngineer
                 {
                     case 0: UpdateOwnPasswordMenu(); break;
                     case 1: UpdateScooterMenu(); break;
-                    //case 2: SearchScooter(); break; bestaat niet
+                    case 2: SearchScooterMenu(); break; 
                     case 3: ShowAllUsersAndRoles(); break;
                     case 4: AddEngineerMenu(); break;
                     case 5: UpdateEngineerMenu(); break;
@@ -77,8 +77,8 @@ public class SystemAdmin : ServiceEngineer
                     case 7: ResetEngineerPasswordMenu(); break;
                     //case 8: UpdateOwnPasswordMenu(); break; ???
                     case 9: DeleteOwnAccountMenu(); break;
-                    //case 10: BackupMenu(); break;
-                    //case 11: BackupRestoreMenu(); break;
+                    case 10: BackupMenu(); break;
+                    case 11: BackupRestoreMenu(); break;
                     //case 12: ViewLogs(); break; bestaat niet
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
@@ -183,6 +183,7 @@ public class SystemAdmin : ServiceEngineer
              '{encryptedStreet}', '{houseNumber}', '{zipCode}', '{encryptedCity}', '{email}', '{encryptedPhone}', '{license}', '{registrationDate}')";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "AddTraveler", $"Traveler {username} added", false);
         Console.WriteLine("Traveller succesvol toegevoegd.");
     }
 
@@ -256,6 +257,7 @@ public class SystemAdmin : ServiceEngineer
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "AddEngineer", $"Engineer {username} added", false);
         Console.WriteLine("Service Engineer succesvol toegevoegd!");
     }
 
@@ -285,6 +287,7 @@ public class SystemAdmin : ServiceEngineer
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = $"UPDATE User SET Username = '{newUsername}', PasswordHash = '{passwordHash}' WHERE Username = '{currentUsername}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(this.Username, "Update Engineer", $"Updated: {currentUsername}", false);
         Console.WriteLine("Service Engineer bijgewerkt.");
     }
 
@@ -308,6 +311,7 @@ public class SystemAdmin : ServiceEngineer
     {
         string sql = $"DELETE FROM User WHERE Username = '{username}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "DeleteEngineer", $"Engineer {username} deleted", true);
         Console.WriteLine("Service Engineer verwijderd: " + username);
     }
 
@@ -332,6 +336,7 @@ public class SystemAdmin : ServiceEngineer
         string tempPassword = "Temp" + new Random().Next(1000, 9999);
         string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
         string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
+        Logging.Log(Username, "ResetEngineerPassword", $"Password reset for {username}", true);
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine($"Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
     }
@@ -348,6 +353,7 @@ public class SystemAdmin : ServiceEngineer
             Console.WriteLine("Gebruikersnaam mag niet leeg zijn.");
             return;
         }
+        Logging.Log(Username, "DeleteOwnAccount", $"Deleted own account: {username}", true);
 
         DeleteOwnAccount(username);
     }
@@ -510,6 +516,7 @@ public class SystemAdmin : ServiceEngineer
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(this.Username, "Update Traveller", $"Updated {oldFirstName} {oldLastName}", false);
         Console.WriteLine("Traveler succesvol bijgewerkt.");
     }
 
@@ -541,6 +548,7 @@ public class SystemAdmin : ServiceEngineer
         string encryptedPhone = CryptographyHelper.Encrypt(phoneNumber);
         string sql = $"DELETE FROM Traveler WHERE FirstName = '{firstName}' AND LastName = '{lastName}' AND Phone = '{encryptedPhone}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "DeleteTraveler", $"Traveler {firstName} {lastName} deleted", true);
         Console.WriteLine($"Traveler verwijderd: {firstName} {lastName}");
     }
 
@@ -601,6 +609,7 @@ public class SystemAdmin : ServiceEngineer
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "AddScooter", $"Scooter {brand} {model} added", false);
         Console.WriteLine("Scooter succesvol toegevoegd.");
     }
 
@@ -624,6 +633,7 @@ public class SystemAdmin : ServiceEngineer
     {
         string sql = $"DELETE FROM Scooter WHERE Id = '{scooterId}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "DeleteScooter", $"Scooter with ID {scooterId} deleted", true);
         Console.WriteLine($"Scooter met ID {scooterId} is verwijderd.");
     }
     public void CreateSystemBackup()
@@ -645,7 +655,7 @@ public class SystemAdmin : ServiceEngineer
             File.Copy(sourcePath, destinationPath);
             string backupcode1 = Guid.NewGuid().ToString().Substring(0, 8);
             backupcode[backupcode1] = destinationPath;
-
+            Logging.Log(Username, "CreateBackup", $"Backup created: {backupFileName}", false);
             Console.WriteLine($" Backup succesvol opgeslagen als: {backupFileName}");
             Console.WriteLine($" Herstelcode (eenmalig): {backupcode1}");
         }
@@ -676,6 +686,7 @@ public class SystemAdmin : ServiceEngineer
             try
             {
                 File.Copy(backupPath, originalPath, overwrite: true);
+                Logging.Log(Username, "RestoreBackup", $"Restored from backup {backupPath}", true);
                 Console.WriteLine(" Backup herstel gelukt.");
                 backupcode.Remove(code);
             }
@@ -685,5 +696,49 @@ public class SystemAdmin : ServiceEngineer
             }
         }
     }
+
+    public void BackupMenu()
+    {
+        Console.Clear();
+        while (true)
+        {
+
+            Console.WriteLine("=== Backup maken ===");
+            Console.Write("Wil je een backup maken? (j/n): ");
+            string antwoord = Console.ReadLine()?.Trim().ToLower();
+
+            if (antwoord == "j")
+            {
+                CreateSystemBackup();
+                break;
+            }
+            else if (antwoord == "n")
+            {
+                break;
+            }
+        }
+    }
+    public void BackupRestoreMenu()
+    {
+        Console.Clear();
+        while (true)
+        {
+
+            Console.WriteLine("=== Backup maken ===");
+            Console.Write("Wil je een backup herstellen (j/n): ");
+            string antwoord = Console.ReadLine()?.Trim().ToLower();
+
+            if (antwoord == "j")
+            {
+                RestoreBackup();
+                break;
+            }
+            else if (antwoord == "n")
+            {
+                break;
+            }
+        }
+    }
+
 
 }

@@ -65,7 +65,7 @@ public class ServiceEngineer : User
                         //UpdateScooter();
                         break;
                     case 2:
-                        //SearchScooter();
+                        SearchScooterMenu(); 
                         break;
                     case 3:
                         return;
@@ -141,6 +141,7 @@ public class ServiceEngineer : User
         ";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt met ID: {id}", false);
         Console.WriteLine("Scooter succesvol bijgewerkt.");
     }
     public void UpdateOwnPasswordMenu()
@@ -172,10 +173,31 @@ public class ServiceEngineer : User
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{this.Username}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(this.Username, "Change Password", "Gebruiker heeft zijn wachtwoord gewijzigd", true);
         Console.WriteLine("Je wachtwoord is succesvol gewijzigd.");
     }
 
-    
+    public void SearchScooterMenu()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Zoek Scooter ===");
+        Console.Write("Voer een zoekterm in (bijv. merk, model, locatie...): ");
+        string keyword = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            Console.WriteLine("Zoekterm mag niet leeg zijn.");
+            return;
+        }
+
+        SearchScooter(keyword);
+
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
+        Console.ReadKey();
+    }
+
+
+
     public void SearchScooter(string keyword)
     {
         string sql = $@"
@@ -205,6 +227,7 @@ public class ServiceEngineer : User
                 $"Batterij: {s.BatteryCapacity} Wh\nLading: {s.StateOfCharge}%\nLocatie: {s.Location}\n" +
                 $"Onderhoud: {s.LastMaintenance:yyyy-MM-dd}\n--------------------------");
         }
+        Logging.Log(this.Username, "Search Scooter", $"Scooter gezocht met keyword: {keyword}", false);
     }
 
 }
