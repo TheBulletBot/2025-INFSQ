@@ -9,8 +9,9 @@ public static class Validation
     public static readonly string PhoneRe = @"^\d{8}$";
     public static readonly string LicenseRe = @"^[A-Z]{1,2}\d{7}$";
 
-    public static string ValidatedInput(string pattern, string errorMessage)
+    public static string ValidatedInput(string pattern, string message, string errorMessage)
     {
+        System.Console.WriteLine(message);
         string userResponse = Console.ReadLine()!;
         while (true)
         {
@@ -19,6 +20,7 @@ public static class Validation
                 return userResponse;
             }
             System.Console.WriteLine(errorMessage);
+            System.Console.WriteLine(message);
             userResponse = Console.ReadLine();
         }
 
