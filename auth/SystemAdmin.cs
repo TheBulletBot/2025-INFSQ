@@ -201,19 +201,36 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Wachtwoord moet minimaal 12 tekens zijn.");
 
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
+        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy");
 
         string encryptedPhone = CryptographyHelper.Encrypt(phone);
         string encryptedStreet = CryptographyHelper.Encrypt(street);
         string encryptedCity = CryptographyHelper.Encrypt(city);
 
-        string sql = $@"INSERT INTO Traveller 
+        string sql = @"INSERT INTO Traveller 
             (Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender,
              Street, HouseNumber, ZipCode, City, Mail, Phone, LicenseNumber, RegistrationDate)
             VALUES
-            ('{Guid.NewGuid()}', '{username}', '{passwordHash}', '{firstName}', '{lastName}', '{birthday:yyyy-MM-dd}', '{gender}',
-             '{encryptedStreet}', '{houseNumber}', '{zipCode}', '{encryptedCity}', '{email}', '{encryptedPhone}', '{license}', '{registrationDate}')";
+            (@id, @username, @password, @firstname, @lastname, '@Borth', @gender,
+             @Estreet, @EHouseNr, @EZipcode, @ECity, @Email, @EPhone, @ELicense, @registrationDate)";
 
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", Guid.NewGuid());
+        queryCommand.Parameters.AddWithValue("@username", CryptographyHelper.Encrypt(username));
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        queryCommand.Parameters.AddWithValue("@firstname", CryptographyHelper.Encrypt(firstName));
+        queryCommand.Parameters.AddWithValue("@lastname", CryptographyHelper.Encrypt(lastName));
+        queryCommand.Parameters.AddWithValue("@Borth", birthday.ToString("dd-MM-yyyy"));
+        queryCommand.Parameters.AddWithValue("@gender", gender);
+        queryCommand.Parameters.AddWithValue("@Estreet", encryptedStreet);
+        queryCommand.Parameters.AddWithValue("@EHouseNr", CryptographyHelper.Encrypt(houseNumber));
+        queryCommand.Parameters.AddWithValue("@EZipcode", CryptographyHelper.Encrypt(zipCode));
+        queryCommand.Parameters.AddWithValue("@ECity", encryptedCity);
+        queryCommand.Parameters.AddWithValue("@Email", CryptographyHelper.Encrypt(email));
+        queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
+        queryCommand.Parameters.AddWithValue("@registrationDate", registrationDate);
+
+        queryCommand.Parameters.AddWithValue("@ELicense", CryptographyHelper.Encrypt(license));
         DatabaseHelper.ExecuteStatement(sql);
         Logging.Log(Username, "AddTraveler", $"Traveler {username} added", false);
         Console.WriteLine("Traveller succesvol toegevoegd.");
@@ -764,19 +781,27 @@ public class SystemAdmin : ServiceEngineer
 
     public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
-        string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
+        string formattedDate = lastMaintenance.ToString("dd-MM-yyyy");
 
         string sql = $@"
             INSERT INTO Scooter 
             (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
             VALUES
-            (@brand, @model, {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
+            (@brand, @model, @topSpeed, @battery, @charge, @totalrange, @location, @oos, @miles, @date)
         ";
         var queryCommand = new SQLiteCommand(sql);
         queryCommand.Parameters.AddWithValue("@brand", CryptographyHelper.Encrypt(brand));
         queryCommand.Parameters.AddWithValue("@model", CryptographyHelper.Encrypt(model));
+        queryCommand.Parameters.AddWithValue("@topSpeed", CryptographyHelper.Encrypt(topSpeed.ToString()));
+        queryCommand.Parameters.AddWithValue("@battery", CryptographyHelper.Encrypt(battery.ToString()));
+        queryCommand.Parameters.AddWithValue("@charge", CryptographyHelper.Encrypt(charge.ToString()));
+        queryCommand.Parameters.AddWithValue("@totalrange", CryptographyHelper.Encrypt(totalRange.ToString()));
+        queryCommand.Parameters.AddWithValue("@location", CryptographyHelper.Encrypt(location));
+        queryCommand.Parameters.AddWithValue("@oos", CryptographyHelper.Encrypt(outOfService.ToString()));
+        queryCommand.Parameters.AddWithValue("@miles", CryptographyHelper.Encrypt(mileage.ToString()));
+        queryCommand.Parameters.AddWithValue("@date", CryptographyHelper.Encrypt(formattedDate));
 
-        DatabaseHelper.ExecuteStatement(sql);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Logging.Log(Username, "AddScooter", $"Scooter {brand} {model} added", false);
         Console.WriteLine("Scooter succesvol toegevoegd.");
     }
@@ -787,9 +812,9 @@ public class SystemAdmin : ServiceEngineer
         Console.WriteLine("=== Verwijder Scooter ===");
 
         string scooterId = Validation.ValidatedInput(
-            Validation.IdRe,
-            "Voer het ID van de scooter in:",
-            "Ongeldig ID. Gebruik alleen cijfers."
+            Validation.NoRegex,
+            "Voer het Serienummer van de scooter in:",
+            "Ongeldig Serienummer. Gebruik alleen cijfers."
         );
 
         DeleteScooter(scooterId);
@@ -800,7 +825,11 @@ public class SystemAdmin : ServiceEngineer
 
     public void DeleteScooter(string scooterId)
     {
-        string sql = $"DELETE FROM Scooter WHERE Id = '{scooterId}'";
+        string sql = $"DELETE FROM Scooter WHERE SerialNumber = @serial";
+
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@serial", CryptographyHelper.Encrypt(scooterId));
+
         DatabaseHelper.ExecuteStatement(sql);
         Logging.Log(Username, "DeleteScooter", $"Scooter with ID {scooterId} deleted", true);
         Console.WriteLine($"Scooter met ID {scooterId} is verwijderd.");
