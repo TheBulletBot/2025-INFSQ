@@ -84,7 +84,7 @@ public static class DBSetup
                     TopSpeed,
                     BatteryCapacity,
                     StateOfCharge,
-                    targetRange
+                    targetRange,
                     Mileage,
                     Location,
                     OutOfService,
@@ -229,7 +229,9 @@ public static class DBSetup
         DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
         DBBackup(
         AdminId TEXT NOT NULL,
-        BackupCode TEXT NOT NULL);
+        BackupCode TEXT NOT NULL,
+        DbPath TEXT NOT NUll
+        );
         ");
         Console.WriteLine("Created User Table.");
     }
