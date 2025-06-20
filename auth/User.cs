@@ -72,7 +72,7 @@ public class ServiceEngineer : User
 public class Admin : ServiceEngineer
 {
     private readonly string connection =
-        @"Data Source=C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-1\ScooterBackend\db\db\INFSQScooterBackend.db";
+        @"Data Source=C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-2\ScooterBackend\db\db\INFSQScooterBackend.db";
     private readonly byte[] _aesKey = Encoding.UTF8.GetBytes("1234567890ABCDEF");   
     private readonly byte[] _aesIV = Encoding.UTF8.GetBytes("FEDCBA0987654321");   
     public Admin(string username, string role) : base(username, role)
