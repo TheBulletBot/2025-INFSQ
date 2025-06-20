@@ -298,15 +298,11 @@ public class SuperAdmin : SystemAdmin
         Console.Write("Gebruikersnaam van de System Admin: ");
         string adminUsername = Console.ReadLine();
 
-        Console.Write("Volledig pad naar backupbestand (.db): ");
-        string backupPath = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(adminUsername) || string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
+        if (string.IsNullOrWhiteSpace(adminUsername))
         {
-            Console.WriteLine("Ongeldige invoer of bestand bestaat niet.");
+            Console.WriteLine("Ongeldige gebruikersnaam.");
             return;
         }
-
         var checkCmd = new SQLiteCommand("SELECT COUNT(*) FROM User WHERE Username = @username AND Role = 'System Admin'");
         checkCmd.Parameters.AddWithValue("@username", CryptographyHelper.Encrypt(adminUsername));
         var count = DatabaseHelper.QueryAsScalar(checkCmd);
@@ -315,6 +311,34 @@ public class SuperAdmin : SystemAdmin
             Console.WriteLine("System Admin niet gevonden.");
             return;
         }
+        string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/backups");
+        if (!Directory.Exists(backupDir))
+        {
+            Console.WriteLine("Backup map bestaat niet.");
+            return;
+        }
+
+        string[] backups = Directory.GetFiles(backupDir, "*.zip");
+        if (backups.Length == 0)
+        {
+            Console.WriteLine("Geen backups gevonden in de map.");
+            return;
+        }
+
+        Console.WriteLine("\nBeschikbare Backups:");
+        for (int i = 0; i < backups.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {Path.GetFileName(backups[i])}");
+        }
+
+        Console.Write("\nKies een backup (nummer): ");
+        if (!int.TryParse(Console.ReadLine(), out int choice) || choice < 1 || choice > backups.Length)
+        {
+            Console.WriteLine("Ongeldige keuze.");
+            return;
+        }
+
+        string selectedBackupPath = backups[choice - 1];
 
         // Genereer unieke restorecode
         string code = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
@@ -322,8 +346,8 @@ public class SuperAdmin : SystemAdmin
         // Voeg toe aan BackupRestore-tabel
         var insertCmd = new SQLiteCommand("INSERT INTO BackupRestore (RestoreCode, BackupFilePath, AdminId) VALUES (@code, @path, @admin)");
         insertCmd.Parameters.AddWithValue("@code", code);
-        insertCmd.Parameters.AddWithValue("@path", backupPath);
-        insertCmd.Parameters.AddWithValue("@admin", adminUsername);
+        insertCmd.Parameters.AddWithValue("@path", selectedBackupPath);
+        insertCmd.Parameters.AddWithValue("@admin", adminUsername); 
 
         DatabaseHelper.ExecuteStatement(insertCmd);
 
@@ -331,7 +355,8 @@ public class SuperAdmin : SystemAdmin
         Console.WriteLine($"\nRestorecode succesvol gegenereerd: {code}");
         Console.ReadKey();
     }
-    
+
+
     public void RevokeRestoreCode()
     {
         Console.Clear();
@@ -351,8 +376,5 @@ public class SuperAdmin : SystemAdmin
         Console.WriteLine($"Alle restore-codes voor gebruiker '{username}' zijn ingetrokken.");
         Logging.Log(this.Username, "Revoke Restore Code", $"Restore-code(s) ingetrokken voor admin: {username}", true);
     }
-
-
-
     
 }

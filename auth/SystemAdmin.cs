@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.IO.Compression;
 
 public class SystemAdmin : ServiceEngineer
 {
@@ -831,27 +832,41 @@ public class SystemAdmin : ServiceEngineer
         string sourcePath = DatabaseHelper.DatabasePath;
         string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/backups");
         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        string backupFileName = $"backup_{timestamp}.db";
-        string destinationPath = Path.Combine(backupDir, backupFileName);
+        string dbFileName = $"backup_{timestamp}.db";
+        string zipFileName = $"backup_{timestamp}.zip";
+        string tempDbPath = Path.Combine(backupDir, dbFileName);
+        string zipPath = Path.Combine(backupDir, zipFileName);
 
         if (!Directory.Exists(backupDir))
         {
             Directory.CreateDirectory(backupDir);
         }
+
         try
         {
-            File.Copy(sourcePath, destinationPath);
+            File.Copy(sourcePath, tempDbPath, overwrite: true);
+
+           
+            using (FileStream zipToOpen = new FileStream(zipPath, FileMode.Create))
+            {
+                using (ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Create))
+                {
+                    archive.CreateEntryFromFile(tempDbPath, dbFileName);
+                }
+            }
+            File.Delete(tempDbPath);
+
+            // 4. Sla zip pad op in dictionary
             string backupcode1 = Guid.NewGuid().ToString().Substring(0, 8);
-            backupcode[backupcode1] = destinationPath;
-            Logging.Log(Username, "CreateBackup", $"Backup created: {backupFileName}", false);
-            Console.WriteLine($" Backup succesvol opgeslagen als: {backupFileName}");
-            
+            backupcode[backupcode1] = zipPath;
+
+            Logging.Log(Username, "CreateBackup", $"Backup created: {zipFileName}", false);
+            Console.WriteLine($" Backup succesvol opgeslagen als ZIP: {zipFileName}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($" Backup mislukt: {ex.Message}");
         }
-
     }
 
     public void RestoreFromCodeMenu()
