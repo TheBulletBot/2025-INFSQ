@@ -76,6 +76,7 @@ public class SuperAdmin : SystemAdmin
                     case 5: UpdateEngineerMenu(); break;
                     case 6: DeleteEngineerMenu(); break;
                     case 7: ResetEngineerPasswordMenu(); break;
+                    case 8: //UpdateOwnProfile 
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
                     case 11: RestoreBackup(); break;
@@ -87,11 +88,11 @@ public class SuperAdmin : SystemAdmin
                     case 17: UpdateScooterMenu(); break;
                     case 18: DeleteScooterMenu(); break;
                     case 19: SearchAndPrintTravelersMenu(); break;
-                    case 21: AddSystemAdminMenu(); break;
-                    case 22: UpdateSystemAdminMenu(); break;
-                    case 23: DeleteSystemAdminMenu(); break;
-                    case 24: ResetSystemAdminPasswordMenu(); break;
-                    case 25: return;
+                    case 20: AddSystemAdminMenu(); break;
+                    case 21: UpdateSystemAdminMenu(); break;
+                    case 22: DeleteSystemAdminMenu(); break;
+                    case 23: ResetSystemAdminPasswordMenu(); break;
+                    case 24: return;
                 }
             }
         }
