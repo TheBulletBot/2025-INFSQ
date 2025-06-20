@@ -134,7 +134,7 @@ public class SuperAdmin : SystemAdmin
         cmd.Parameters.AddWithValue("@currentUsername", CryptographyHelper.Encrypt(currentUsername));
         cmd.Parameters.AddWithValue("@currentUsername", CryptographyHelper.Encrypt(firstName));
         cmd.Parameters.AddWithValue("@currentUsername", CryptographyHelper.Encrypt(lastName));
-        
+
 
         DatabaseHelper.ExecuteStatement(cmd);
         Logging.Log(Username, "Update System Admin", $"System Admin {currentUsername} gewijzigd naar {newUsername}", false);
@@ -289,45 +289,70 @@ public class SuperAdmin : SystemAdmin
         ResetSystemAdminPassword(username);
     }
 
+
     public void GenerateRestoreCodeForAdmin()
     {
         Console.Clear();
-        Console.WriteLine("=== Genereer Restore Code voor Admin ===");
-        Console.Write("Gebruikersnaam van System Admin: ");
+        Console.WriteLine("=== Genereer Restore Code voor System Admin ===");
+
+        Console.Write("Gebruikersnaam van de System Admin: ");
         string adminUsername = Console.ReadLine();
 
-        Console.Write("Pad naar de backup die hersteld mag worden: ");
+        Console.Write("Volledig pad naar backupbestand (.db): ");
         string backupPath = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(adminUsername) || string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
         {
-            Console.WriteLine("Ongeldige gebruikersnaam of backuppad.");
+            Console.WriteLine("Ongeldige invoer of bestand bestaat niet.");
             return;
         }
 
-        string restoreCode = Guid.NewGuid().ToString().Substring(0, 8); // kortere code
-        backupcode[restoreCode] = backupPath;
+        var checkCmd = new SQLiteCommand("SELECT COUNT(*) FROM User WHERE Username = @username AND Role = 'System Admin'");
+        checkCmd.Parameters.AddWithValue("@username", CryptographyHelper.Encrypt(adminUsername));
+        var count = DatabaseHelper.QueryAsScalar(checkCmd);
+        if (count == 0)
+        {
+            Console.WriteLine("System Admin niet gevonden.");
+            return;
+        }
 
-        Logging.Log(Username, "Generate Restore Code", $"Restore-code gegenereerd voor {adminUsername}: {restoreCode}", false);
-        Console.WriteLine($"Restore-code gegenereerd: {restoreCode}");
+        // Genereer unieke restorecode
+        string code = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+
+        // Voeg toe aan BackupRestore-tabel
+        var insertCmd = new SQLiteCommand("INSERT INTO BackupRestore (RestoreCode, BackupFilePath, AdminId) VALUES (@code, @path, @admin)");
+        insertCmd.Parameters.AddWithValue("@code", code);
+        insertCmd.Parameters.AddWithValue("@path", backupPath);
+        insertCmd.Parameters.AddWithValue("@admin", adminUsername);
+
+        DatabaseHelper.ExecuteStatement(insertCmd);
+
+        Logging.Log(this.Username, "Genereer Restore Code", $"Restorecode '{code}' gegenereerd voor {adminUsername}", false);
+        Console.WriteLine($"\nRestorecode succesvol gegenereerd: {code}");
+        Console.ReadKey();
     }
+    
     public void RevokeRestoreCode()
     {
         Console.Clear();
-        Console.WriteLine("=== Herstelcode intrekken ===");
-        Console.Write("Voer de code in die ingetrokken moet worden: ");
-        string code = Console.ReadLine();
+        Console.WriteLine("=== Restore Code Intrekken ===");
 
-        if (!backupcode.ContainsKey(code))
-        {
-            Console.WriteLine("Code bestaat niet.");
-            return;
-        }
+        Console.Write("Voer de gebruikersnaam in van de System Admin: ");
+        string username = Console.ReadLine();
 
-        backupcode.Remove(code);
-        Logging.Log(Username, "Revoke Restore Code", $"Restore-code ingetrokken: {code}", true);
-        Console.WriteLine("Code succesvol verwijderd.");
+        string encryptedUsername = CryptographyHelper.Encrypt(username);
+
+        string sql = "DELETE FROM DBBackup WHERE AdminId = @adminId";
+        var cmd = new SQLiteCommand(sql);
+        cmd.Parameters.AddWithValue("@adminId", encryptedUsername);
+
+        DatabaseHelper.ExecuteStatement(cmd);
+
+        Console.WriteLine($"Alle restore-codes voor gebruiker '{username}' zijn ingetrokken.");
+        Logging.Log(this.Username, "Revoke Restore Code", $"Restore-code(s) ingetrokken voor admin: {username}", true);
     }
+
+
 
     
 }

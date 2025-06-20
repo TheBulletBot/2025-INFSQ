@@ -154,5 +154,17 @@ public static class DatabaseHelper
             Console.WriteLine("Executed Statement");
         }
     }
+
+    public static int QueryAsScalar(SQLiteCommand command)
+    {
+        using (var connection = new SQLiteConnection(readString))
+        {
+            connection.Open();
+            command.Connection = connection;
+            object result = command.ExecuteScalar();
+            return Convert.ToInt32(result);
+        }
+    }
+
 }
 

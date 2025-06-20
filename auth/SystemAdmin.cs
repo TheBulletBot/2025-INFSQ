@@ -84,7 +84,7 @@ public class SystemAdmin : ServiceEngineer
                     //case 8: UpdateOwnPasswordMenu(); break; ???
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
-                    case 11: BackupRestoreMenu(); break;
+                    case 11: RestoreFromCodeMenu(); break;
                     case 12: ViewLogs(); break;
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
@@ -686,7 +686,7 @@ public class SystemAdmin : ServiceEngineer
     public void DeleteTraveler(string firstName, string lastName, string phoneNumber)
     {
         string encryptedPhone = CryptographyHelper.Encrypt(phoneNumber);
-        string sql = $"DELETE FROM Traveler WHERE FirstName = @firstname AND LastName = @lastname AND Phone = @Ephone";
+        var sql = $"DELETE FROM Traveler WHERE FirstName = @firstname AND LastName = @lastname AND Phone = @Ephone";
         var queryCommand = new SQLiteCommand(sql);
         queryCommand.Parameters.AddWithValue("@firstname", CryptographyHelper.Encrypt(firstName));
         queryCommand.Parameters.AddWithValue("@lastname", CryptographyHelper.Encrypt(lastName));
@@ -838,7 +838,6 @@ public class SystemAdmin : ServiceEngineer
         {
             Directory.CreateDirectory(backupDir);
         }
-
         try
         {
             File.Copy(sourcePath, destinationPath);
@@ -855,33 +854,90 @@ public class SystemAdmin : ServiceEngineer
 
     }
 
+    public void RestoreFromCodeMenu()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Restore Backup via Code ===");
+
+       
+        string sql = "SELECT RestoreCode, BackupFilePath FROM BackupRestore WHERE AdminId = @admin";
+        var cmd = new SQLiteCommand(sql);
+        cmd.Parameters.AddWithValue("@admin", this.Username); // of ID als je met GUID werkt
+
+        var result = DatabaseHelper.Query<DBBackup>(cmd);
+
+        if (result.Count == 0)
+        {
+            Console.WriteLine("Er zijn geen beschikbare restorecodes voor jouw account.");
+            Console.ReadKey();
+            return;
+        }
+
+        Console.WriteLine("\nBeschikbare restorecodes:\n");
+        for (int i = 0; i < result.Count; i++)
+        {
+            Console.WriteLine($"{i + 1}. Code: {result[i].RestoreCode} | Pad: {result[i].DbPath}");
+        }
+
+        Console.Write("\nKies een nummer om te herstellen of druk op [Enter] om terug te keren: ");
+        string input = Console.ReadLine();
+
+        if (int.TryParse(input, out int keuze) && keuze > 0 && keuze <= result.Count)
+        {
+            string selectedCode = result[keuze - 1].RestoreCode;
+            RestoreFromCode(selectedCode);
+        }
+        else
+        {
+            Console.WriteLine("Geen geldige selectie gemaakt.");
+        }
+
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
+        Console.ReadKey();
+    }
+
+
    public void RestoreFromCode(string code)
     {
-        string sql = "SELECT BackupFilePath FROM DBBackUp WHERE restoreCode = @code";
+        string sql = "SELECT BackupFilePath FROM BackupRestore WHERE RestoreCode = @code";
         var cmd = new SQLiteCommand(sql);
         cmd.Parameters.AddWithValue("@code", code);
 
-        var result = DatabaseHelper.QueryAsString(cmd); 
+        var result = DatabaseHelper.QueryAsString(cmd);
         if (result.Count == 0)
         {
-            Console.WriteLine("Restorecode ongeldig.");
+            Console.WriteLine("Restorecode ongeldig of al gebruikt.");
             return;
         }
 
         string backupPath = result[0];
         string originalPath = DatabaseHelper.DatabasePath;
 
+        if (!File.Exists(backupPath))
+        {
+            Console.WriteLine("Het opgegeven back-upbestand bestaat niet (meer).");
+            return;
+        }
+
         try
         {
             File.Copy(backupPath, originalPath, overwrite: true);
-            Console.WriteLine("Backup succesvol hersteld.");
-            Logging.Log("System", "Restore", $"Backup hersteld via code: {code}", true);
+
+            
+            string deleteSql = "DELETE FROM BackupRestore WHERE RestoreCode = @code";
+            var deleteCmd = new SQLiteCommand(deleteSql);
+            deleteCmd.Parameters.AddWithValue("@code", code);
+            DatabaseHelper.ExecuteStatement(deleteCmd);
+
+            Logging.Log(this.Username, "Restore from Code", $"Backup hersteld vanaf pad: {backupPath}", true);
+            Console.WriteLine("✅ Backup succesvol hersteld.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Fout bij herstellen: {ex.Message}");
+            Console.WriteLine($"❌ Fout bij herstellen: {ex.Message}");
         }
     }
+
 
 
     public void BackupMenu()
@@ -905,27 +961,7 @@ public class SystemAdmin : ServiceEngineer
             }
         }
     }
-    public void BackupRestoreMenu()
-    {
-        Console.Clear();
-        while (true)
-        {
 
-            Console.WriteLine("=== Backup maken ===");
-            Console.Write("Wil je een backup herstellen (j/n): ");
-            string antwoord = Console.ReadLine()?.Trim().ToLower();
-
-            if (antwoord == "j")
-            {
-                RestoreBackup();
-                break;
-            }
-            else if (antwoord == "n")
-            {
-                break;
-            }
-        }
-    }
     public void ViewLogs()
     {
         Console.Clear();
@@ -933,7 +969,7 @@ public class SystemAdmin : ServiceEngineer
         string logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Logs");
         if (!Directory.Exists(logsDir))
         {
-            Console.WriteLine("❌ Geen logmap gevonden.");
+            Console.WriteLine(" Geen logmap gevonden.");
             Console.ReadKey();
             return;
         }
