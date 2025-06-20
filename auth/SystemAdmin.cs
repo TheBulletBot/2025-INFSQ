@@ -164,8 +164,8 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Ongeldig telefoonnummer");
         if (!Regex.IsMatch(license, @"^[A-Z]{1,2}\d{7}$"))
             throw new ArgumentException("Ongeldig rijbewijsnummer");
-        if (password.Length < 4)
-            throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
+        if (!Regex.IsMatch(password,Validation.PasswordRe))
+            throw new ArgumentException("Wachtwoord moet minimaal 12 tekens zijn.");
 
         string passwordHash = CryptographyHelper.CreateHashValue(password);
         string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
