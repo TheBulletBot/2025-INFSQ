@@ -348,7 +348,7 @@ public class SuperAdmin : SystemAdmin
         var insertCmd = new SQLiteCommand("INSERT INTO DBBackUp (BackupCode, DbPath, AdminId) VALUES (@code, @path, @admin)");
         insertCmd.Parameters.AddWithValue("@code", code);
         insertCmd.Parameters.AddWithValue("@path", selectedBackupPath);
-        insertCmd.Parameters.AddWithValue("@admin", adminUsername); super
+        insertCmd.Parameters.AddWithValue("@admin", adminUsername); 
 
         DatabaseHelper.ExecuteStatement(insertCmd);
 
