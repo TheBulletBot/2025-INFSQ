@@ -6,18 +6,18 @@ using Microsoft.EntityFrameworkCore;
 
 public static class DatabaseHelper
 {
-    public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"../../../db/db/INFSQScooterBackend.db");
+    public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/db/INFSQScooterBackend.db");
     private static string readString = new SqliteConnectionStringBuilder()
     {
         Mode = SqliteOpenMode.ReadOnly,
         DataSource = DatabaseHelper.DatabasePath
     }.ToString();
-    
+
     private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
-        {
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            DataSource = DatabaseHelper.DatabasePath
-        }.ToString();
+    {
+        Mode = SqliteOpenMode.ReadWriteCreate,
+        DataSource = DatabaseHelper.DatabasePath
+    }.ToString();
 
     /// <summary>
     /// DO NOT USE THIS VERSION OF THE FUNCTION IF YOU CAN AVOID IT. THIS IS UNSAFE. USE THE ONE THAT TAKES SQLITECOMMAND INSTEAD.
@@ -83,7 +83,8 @@ public static class DatabaseHelper
             }
         }
     }
-    public static List<string> QueryAsString(string queryString) {
+    public static List<string> QueryAsString(string queryString)
+    {
         using (var connection = new SqliteConnection(readString))
         {
             connection.Open();
@@ -115,6 +116,17 @@ public static class DatabaseHelper
                 command.CommandText = queryString;
                 command.ExecuteNonQuery();
             }
+
+            Console.WriteLine("Executed Statement");
+        }
+    }
+    public static void ExecuteStatement(SqliteCommand query)
+    {
+        using (var connection = new SqliteConnection(modifyDBConnectionString))
+        {
+            connection.Open();
+
+            query.ExecuteNonQuery();
 
             Console.WriteLine("Executed Statement");
         }
