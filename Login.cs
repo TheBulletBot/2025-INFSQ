@@ -7,7 +7,7 @@ public static class Login
     public static User user;
     public static void LoginScreen()
     {
-        System.Console.WriteLine("Welcome to ScooterVille's Scooter Rental Management System\n \nPlease Log in.\n\n\n");
+        System.Console.WriteLine("Welkom bij ScooterVille's Scooterverhuur Management System\n \nLog in alstublieft.\n\n\n");
         int attempts = 0;
         bool correctLogin = false;
         while (!correctLogin)
@@ -15,17 +15,17 @@ public static class Login
             if (attempts > 0)
             {
                 Console.Clear();
-                System.Console.WriteLine("----- Incorrect Username or Password, Please Try again----- \n\n");
+                System.Console.WriteLine("----- Onjuiste Gebruikersnaam of wachtwoord, Probeer opnieuw----- \n\n");
             }
             if (attempts > 3)
             {
                 Console.Clear();
-                System.Console.WriteLine("---- Login limit reached. The Application will now close ----");
+                System.Console.WriteLine("---- Login limiet bereikt. De applicatie sluit nu. ----");
                 return;
             }
-            System.Console.WriteLine("Username: ");//DEBUG
+            System.Console.WriteLine("Gebruikersnaam: ");//DEBUG
             var username = CryptographyHelper.Encrypt(Console.ReadLine());
-            System.Console.WriteLine("\nPassword: ");//DEBUG
+            System.Console.WriteLine("\nWachtwoord: ");//DEBUG
 
             //compute hash
             var password = CryptographyHelper.CreateHashValue(Console.ReadLine());
