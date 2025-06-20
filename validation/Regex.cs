@@ -12,6 +12,8 @@ public static class Validation
     public static readonly string BrandRe = @"^[a-zA-Z0-9\s\-]{2,20}$";
     public static readonly string ModelRe = @"^[a-zA-Z0-9\s\-]{1,20}$";
     public static readonly string LocationRe = @"^[a-zA-Z0-9\s,.'\-]{2,30}$";
+    public static readonly string NameRe = @"^[a-zA-ZÀ-ÿ\-'\s]{2,30}$";
+    public static readonly string EmailRe = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
 
     public static string ValidatedInput(string pattern, string message, string errorMessage)
     {
