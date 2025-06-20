@@ -8,7 +8,7 @@ public class SystemAdmin : ServiceEngineer
 {
 
     public SystemAdmin(string username, string role) : base(username, role) { }
-    private Dictionary<string, string> backupcode = new();
+    public static Dictionary<string, string> backupcode = new();
 
     public override void Menu()
     {
