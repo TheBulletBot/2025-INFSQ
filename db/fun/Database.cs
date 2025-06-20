@@ -124,6 +124,23 @@ public static class DatabaseHelper
             }
         }
     }
+    public static void ExecuteStatement(string queryString)
+    {
+        using (var connection = new SQLiteConnection(modifyDBConnectionString))
+        {
+            connection.Open();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = queryString;
+                command.CommandType = System.Data.CommandType.Text;
+                command.Connection = connection;
+                command.ExecuteNonQuery();
+            }
+
+            Console.WriteLine("Executed Statement");
+        }
+    }
 
     public static void ExecuteStatement(SQLiteCommand query)
     {
