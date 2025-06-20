@@ -851,7 +851,7 @@ public class SystemAdmin : ServiceEngineer
             backupcode[backupcode1] = destinationPath;
             Logging.Log(Username, "CreateBackup", $"Backup created: {backupFileName}", false);
             Console.WriteLine($" Backup succesvol opgeslagen als: {backupFileName}");
-            Console.WriteLine($" Herstelcode (eenmalig): {backupcode1}");
+            
         }
         catch (Exception ex)
         {
@@ -860,36 +860,34 @@ public class SystemAdmin : ServiceEngineer
 
     }
 
-    public void RestoreBackup()
+   public void RestoreFromCode(string code)
     {
-        Console.Clear();
+        string sql = "SELECT BackupFilePath FROM DBBackUp WHERE restoreCode = @code";
+        var cmd = new SQLiteCommand(sql);
+        cmd.Parameters.AddWithValue("@code", code);
 
-        Console.WriteLine("=== Restore System from Backup ===");
-        Console.Write("Enter the restore code: ");
-        string code = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(code) || !backupcode.ContainsKey(code))
+        var result = DatabaseHelper.QueryAsString(cmd); 
+        if (result.Count == 0)
         {
-            Console.WriteLine("Ongeldige code of code al gebruikt.");
+            Console.WriteLine("Restorecode ongeldig.");
+            return;
         }
-        else
-        {
-            string backupPath = backupcode[code];
-            string originalPath = DatabaseHelper.DatabasePath;
 
-            try
-            {
-                File.Copy(backupPath, originalPath, overwrite: true);
-                Logging.Log(Username, "RestoreBackup", $"Restored from backup {backupPath}", true);
-                Console.WriteLine(" Backup herstel gelukt.");
-                backupcode.Remove(code);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($" Herstel mislukt : {ex.Message}");
-            }
+        string backupPath = result[0];
+        string originalPath = DatabaseHelper.DatabasePath;
+
+        try
+        {
+            File.Copy(backupPath, originalPath, overwrite: true);
+            Console.WriteLine("Backup succesvol hersteld.");
+            Logging.Log("System", "Restore", $"Backup hersteld via code: {code}", true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fout bij herstellen: {ex.Message}");
         }
     }
+
 
     public void BackupMenu()
     {

@@ -105,23 +105,26 @@ public static class DatabaseHelper
         }
     }
 
-    public static void ExecuteStatement(string queryString)
+    public static List<string> QueryAsString(SQLiteCommand cmd)
     {
-        using (var connection = new SQLiteConnection(modifyDBConnectionString))
+        using (var connection = new SQLiteConnection(readString))
         {
             connection.Open();
+            cmd.Connection = connection;
 
-            using (var command = connection.CreateCommand())
+            using (SQLiteDataReader reader = cmd.ExecuteReader())
             {
-                command.CommandText = queryString;
-                command.CommandType = System.Data.CommandType.Text;
-                command.Connection = connection;
-                command.ExecuteNonQuery();
+                List<string> result = new();
+                while (reader.Read())
+                {
+                    var the = reader.GetString(0);
+                    result.Add(the);
+                }
+                return result;
             }
-
-            Console.WriteLine("Executed Statement");
         }
     }
+
     public static void ExecuteStatement(SQLiteCommand query)
     {
         using (var connection = new SQLiteConnection(modifyDBConnectionString))
