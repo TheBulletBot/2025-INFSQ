@@ -1,33 +1,33 @@
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Text.Json;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 
 public static class DatabaseHelper
 {
     public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/db/INFSQScooterBackend.db");
-    private static string readString = new SqliteConnectionStringBuilder()
+    private static string readString = new SQLiteConnectionStringBuilder()
     {
-        Mode = SqliteOpenMode.ReadOnly,
+        ReadOnly = true,
         DataSource = DatabaseHelper.DatabasePath
     }.ToString();
 
-    private static string modifyDBConnectionString = new SqliteConnectionStringBuilder()
+    private static string modifyDBConnectionString = new SQLiteConnectionStringBuilder()
     {
-        Mode = SqliteOpenMode.ReadWriteCreate,
+        ReadOnly = false,
         DataSource = DatabaseHelper.DatabasePath
     }.ToString();
 
     /// <summary>
-    /// DO NOT USE THIS VERSION OF THE FUNCTION IF YOU CAN AVOID IT. THIS IS UNSAFE. USE THE ONE THAT TAKES SQLITECOMMAND INSTEAD.
+    /// DO NOT USE THIS VERSION OF THE FUNCTION IF YOU CAN AVOID IT. THIS IS UNSAFE. USE THE ONE THAT TAKES SQLiteCOMMAND INSTEAD.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="query"></param>
     /// <returns></returns>
     public static List<T> Query<T>(string query)
     {
-        var queryCommand = new SqliteCommand(query);
+        var queryCommand = new SQLiteCommand(query);
         return Query<T>(queryCommand);
     }
 
@@ -37,15 +37,15 @@ public static class DatabaseHelper
     /// <typeparam name="T"></typeparam>
     /// <param name="query"></param>
     /// <returns></returns>
-    public static List<T> Query<T>(SqliteCommand query)
+    public static List<T> Query<T>(SQLiteCommand query)
     {
-        using (var connection = new SqliteConnection(readString))
+        using (var connection = new SQLiteConnection(readString))
         {
             connection.Open();
 
             query.Connection = connection;
 
-            using (SqliteDataReader reader = query.ExecuteReader())
+            using (SQLiteDataReader reader = query.ExecuteReader())
             {
                 List<string> result = new();
                 while (reader.Read())
@@ -85,7 +85,7 @@ public static class DatabaseHelper
     }
     public static List<string> QueryAsString(string queryString)
     {
-        using (var connection = new SqliteConnection(readString))
+        using (var connection = new SQLiteConnection(readString))
         {
             connection.Open();
 
@@ -94,12 +94,13 @@ public static class DatabaseHelper
             queryString;
 
 
-            using (SqliteDataReader reader = command.ExecuteReader())
+            using (SQLiteDataReader reader = command.ExecuteReader())
             {
                 List<string> result = new();
                 while (reader.Read())
                 {
-                    result.Add(reader.GetString(0));
+                    var the = reader.GetString(0);
+                    result.Add(the);
                 }
                 return result;
             }
@@ -107,7 +108,7 @@ public static class DatabaseHelper
     }
     public static void ExecuteStatement(string queryString)
     {
-        using (var connection = new SqliteConnection(modifyDBConnectionString))
+        using (var connection = new SQLiteConnection(modifyDBConnectionString))
         {
             connection.Open();
 
@@ -120,9 +121,9 @@ public static class DatabaseHelper
             Console.WriteLine("Executed Statement");
         }
     }
-    public static void ExecuteStatement(SqliteCommand query)
+    public static void ExecuteStatement(SQLiteCommand query)
     {
-        using (var connection = new SqliteConnection(modifyDBConnectionString))
+        using (var connection = new SQLiteConnection(modifyDBConnectionString))
         {
             connection.Open();
 

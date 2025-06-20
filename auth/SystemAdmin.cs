@@ -1,4 +1,6 @@
 ﻿
+using System.ComponentModel;
+using System.Data.SQLite;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -201,6 +203,7 @@ public class SystemAdmin : ServiceEngineer
         {
             Console.WriteLine($"UserName: {user.Username,-15} | Rol: {user.Role}");
         }
+        Logging.Log(this.Username, "Show All Users", $"Displayed each user and its role", false);
     }
 
     public void AddEngineerMenu()
@@ -208,23 +211,41 @@ public class SystemAdmin : ServiceEngineer
         Console.Clear();
         Console.WriteLine("=== Voeg Service Engineer toe ===");
         Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
+        string username = Validation.ValidatedInput(Validation.UsernameRe, "Username moet tussen 8-10 letters zijn en mag alleen letters, getallen, en _'. bevatten");
         Console.Write("Wachtwoord: ");
-        string password = Console.ReadLine();
+        string password = Validation.ValidatedInput(Validation.PasswordRe, "Wachtwoord moet tussen 12-30 letters zijn en moet 1 Hoofdletter, getal, en speciaal karakter bevatten");
+        System.Console.WriteLine("Voornaam: ");
+        string firstName = Console.ReadLine()!;
+        System.Console.WriteLine("Achternaam: ");
+        string lastName = Console.ReadLine()!;
 
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)||string.IsNullOrWhiteSpace(firstName)||string.IsNullOrWhiteSpace(lastName))
         {
-            Console.WriteLine("Gebruikersnaam en wachtwoord mogen niet leeg zijn.");
+            Console.WriteLine("De Velden mogen niet leeg zijn.");
             return;
         }
 
-        AddEngineer(username, password);
+        AddEngineer(username, password, firstName, lastName);
+        Logging.Log(this.Username, "Add Engineer", $"Added new Engineer with Username: {username}", false);
     }
 
-    public void AddEngineer(string username, string password)
+    public void AddEngineer(string username, string password,string firstName, string lastName)
     {
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string sql = $"INSERT INTO User (Id, Username, PasswordHash, Role) VALUES ('{Guid.NewGuid()}', '{username}', '{passwordHash}', 'Service Engineer')";
+        string encryptedUsername = CryptographyHelper.Encrypt(username);
+        var registrationDate = DateTime.Now.ToString("dd-MM-yyyy");
+        string encryptedFirstName = CryptographyHelper.Encrypt(firstName);
+        string encryptedLastName = CryptographyHelper.Encrypt(lastName);
+        string sql = $@"INSERT INTO User (Id, Username, PasswordHash, Role,FirstName, LastName, RegistrationDate) 
+        VALUES ('{Guid.NewGuid()}', '@username', '@password', 'Service Engineer',@firstname, @lastname, @registrationdate)";
+
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.Add(new SQLiteParameter("@username", encryptedUsername));
+        queryCommand.Parameters.Add(new SQLiteParameter("@password", passwordHash));
+        queryCommand.Parameters.Add(new SQLiteParameter("@firstname", encryptedFirstName));
+        queryCommand.Parameters.Add(new SQLiteParameter("@lastname", encryptedLastName));
+        queryCommand.Parameters.Add(new SQLiteParameter("@registrationdate", registrationDate));
+
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine("Service Engineer toegevoegd!");
     }
@@ -234,11 +255,11 @@ public class SystemAdmin : ServiceEngineer
         Console.Clear();
         Console.WriteLine("=== Pas Service Engineer aan ===");
         Console.Write("Huidige gebruikersnaam: ");
-        string currentUsername = Console.ReadLine();
+        string currentUsername = Console.ReadLine()!;
         Console.Write("Nieuwe gebruikersnaam: ");
-        string newUsername = Console.ReadLine();
+        string newUsername = Console.ReadLine()!;
         Console.Write("Nieuwe wachtwoord: ");
-        string newPassword = Console.ReadLine();
+        string newPassword = Console.ReadLine()!;
 
         if (string.IsNullOrWhiteSpace(currentUsername) || string.IsNullOrWhiteSpace(newUsername) || string.IsNullOrWhiteSpace(newPassword))
         {
@@ -247,6 +268,7 @@ public class SystemAdmin : ServiceEngineer
         }
 
         UpdateEngineer(currentUsername, newUsername, newPassword);
+        Logging.Log(this.Username, "Update Engineer", $"Updated Engineer with (former)Username: {currentUsername}", false);
     }
 
     public void UpdateEngineer(string currentUsername, string newUsername, string newPassword)

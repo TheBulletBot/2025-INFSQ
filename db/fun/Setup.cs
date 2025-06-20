@@ -50,7 +50,7 @@ public static class DBSetup
     private static void InitScooterTable()
     {
         string queryString = @"CREATE TABLE IF NOT EXISTS Scooter(
-            SerialNumber TEXT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE, 
+            SerialNumber TEXT PRIMARY KEY NOT NULL UNIQUE, 
             Brand TEXT,
             Model TEXT,
             TopSpeed INTEGER,
@@ -147,19 +147,18 @@ public static class DBSetup
     private static void InitTravelerTable()
     {
         DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS Traveler(
-            Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
-            Username VARCHAR(10) UNIQUE,
-            PasswordHash INT,
-            FirstName VARCHAR(255),
-            LastName VARCHAR(255),
-            Birthday VARCHAR(255),
-            Gender VARCHAR(255), 
-            Street VARCHAR(255),
-            HouseNumber VARCHAR(5),
-            ZipCode VARCHAR(255),
-            City VARCHAR(255),
-            Mail VARCHAR(255),
-            Phone VARCHAR (8),
+            Id TEXT PRIMARY KEY NOT NULL UNIQUE,
+            Username TEXT UNIQUE,
+            FirstName TEXT,
+            LastName TEXT,
+            Birthday TEXT,
+            Gender TEXT, 
+            Street TEXT,
+            HouseNumber TEXT,
+            ZipCode TEXT,
+            City TEXT,
+            Mail TEXT,
+            Phone TEXT,
             LicenseNumber TEXT UNIQUE NOT NULL,
             RegistrationDate TEXT
             );");
@@ -209,9 +208,9 @@ public static class DBSetup
     {
         DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
         User(
-        Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
-        Username VARCHAR(10) UNIQUE,
-        PasswordHash INT,
+        Id TEXT PRIMARY KEY NOT NULL UNIQUE,
+        Username TEXT UNIQUE,
+        PasswordHash TEXT,
         Role TEXT, 
         FirstName TEXT, 
         LastName TEXT,
