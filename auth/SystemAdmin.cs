@@ -734,12 +734,7 @@ public class SystemAdmin : ServiceEngineer
             Console.Write("Ongeldige invoer. Voer een geldig percentage in voor de ladingstatus: ");
         }
 
-        Console.Write("Totaal bereik (km): ");
-        int totalRange;
-        while (!int.TryParse(Console.ReadLine(), out totalRange))
-        {
-            Console.Write("Ongeldige invoer. Voer een geldig getal in voor het bereik: ");
-        }
+        string targetRange = Validation.ValidatedInput(Validation.NoRegex, "Optimum oplaadNiveau: ", "Ongeldige invoer. Voer een geldig bereik in: (bijvoorbeeld: 30-80)");
 
         string location = Validation.ValidatedInput(
             Validation.LocationRe,
@@ -768,13 +763,13 @@ public class SystemAdmin : ServiceEngineer
             Console.Write("Ongeldige datum. Probeer opnieuw (YYYY-MM-DD): ");
         }
 
-        AddScooter(brand, model, topSpeed, battery, charge, totalRange, location, outOfService, mileage, lastMaintenance);
+        AddScooter(brand, model, topSpeed, battery, charge, targetRange, location, outOfService, mileage, lastMaintenance);
 
         Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
 
-    public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
+    public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, string targetRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
         string formattedDate = lastMaintenance.ToString("dd-MM-yyyy");
 
@@ -791,7 +786,7 @@ public class SystemAdmin : ServiceEngineer
         queryCommand.Parameters.AddWithValue("@topSpeed", CryptographyHelper.Encrypt(topSpeed.ToString()));
         queryCommand.Parameters.AddWithValue("@battery", CryptographyHelper.Encrypt(battery.ToString()));
         queryCommand.Parameters.AddWithValue("@charge", CryptographyHelper.Encrypt(charge.ToString()));
-        queryCommand.Parameters.AddWithValue("@totalrange", CryptographyHelper.Encrypt(totalRange.ToString()));
+        queryCommand.Parameters.AddWithValue("@totalrange", CryptographyHelper.Encrypt(targetRange.ToString()));
         queryCommand.Parameters.AddWithValue("@location", CryptographyHelper.Encrypt(location));
         queryCommand.Parameters.AddWithValue("@oos", CryptographyHelper.Encrypt(outOfService.ToString()));
         queryCommand.Parameters.AddWithValue("@miles", CryptographyHelper.Encrypt(mileage.ToString()));

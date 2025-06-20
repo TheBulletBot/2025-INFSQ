@@ -20,7 +20,6 @@ public class Scooter
         int BatteryCapacity,
         int StateOfCharge,
         string TargetRange,
-
         string Location,
         int OutOfService,
         float Mileage,

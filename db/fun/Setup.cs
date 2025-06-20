@@ -55,8 +55,7 @@ public static class DBSetup
             TopSpeed INTEGER,
             BatteryCapacity INTEGER,
             StateOfCharge INTEGER,
-            TargetMin INTEGER,
-            TargetMax INTEGER,
+            TargetRange TEXT,
             Mileage INTEGER,
             Location TEXT,
             OutOfService INTEGER,
@@ -84,7 +83,7 @@ public static class DBSetup
                     TopSpeed,
                     BatteryCapacity,
                     StateOfCharge,
-                    targetRange
+                    TargetRange,
                     Mileage,
                     Location,
                     OutOfService,
@@ -229,7 +228,9 @@ public static class DBSetup
         DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
         DBBackup(
         AdminId TEXT NOT NULL,
-        BackupCode TEXT NOT NULL);
+        BackupCode TEXT NOT NULL,
+        DbPath TEXT NOT NUll
+        );
         ");
         Console.WriteLine("Created User Table.");
     }
