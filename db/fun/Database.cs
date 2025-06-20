@@ -90,22 +90,21 @@ public static class DatabaseHelper
             connection.Open();
 
             var command = connection.CreateCommand();
-            command.CommandText =
-            queryString;
-
+            command.CommandText = queryString;
 
             using (SQLiteDataReader reader = command.ExecuteReader())
             {
                 List<string> result = new();
                 while (reader.Read())
                 {
-                    var the = reader.GetString(0);
-                    result.Add(the);
+                    var value = reader.IsDBNull(0) ? "" : reader.GetValue(0).ToString();
+                    result.Add(value);
                 }
                 return result;
             }
         }
     }
+
     public static void ExecuteStatement(string queryString)
     {
         using (var connection = new SQLiteConnection(modifyDBConnectionString))

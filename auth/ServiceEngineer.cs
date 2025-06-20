@@ -68,7 +68,7 @@ public class ServiceEngineer : User
         }
     }
 
-    public void UpdateScooterMenu()
+    public  void UpdateScooterMenu()
     {
         Console.Clear();
         Console.WriteLine("=== Scooter Bijwerken ===");
@@ -146,21 +146,17 @@ public class ServiceEngineer : User
             Console.Write("Ongeldige datum. Probeer opnieuw (YYYY-MM-DD): ");
         }
 
-        UpdateScooter(id, brand, model, topSpeed, battery, charge, totalRange, location, outOfService, mileage, lastMaintenance);
+        UpdateScooter( charge, totalRange, location, outOfService, mileage, lastMaintenance);
 
         Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
 
-    public void UpdateScooter(string id, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
+     public void UpdateScooter( int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
         string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
 
         string sql = @"UPDATE Scooter
-            SET Brand = @brand,
-                Model = @model,
-                TopSpeed = @topSpeed,
-                BatteryCapacity = @battery,
                 StateOfCharge = @charge,
                 TargetRange = @totalRange,
                 Location = @location,
@@ -170,11 +166,6 @@ public class ServiceEngineer : User
             WHERE Id = @id";
 
         var queryCommand = new SQLiteCommand(sql);
-        queryCommand.Parameters.AddWithValue("@id", id);
-        queryCommand.Parameters.AddWithValue("@brand", brand);
-        queryCommand.Parameters.AddWithValue("@model", model);
-        queryCommand.Parameters.AddWithValue("@topSpeed", topSpeed);
-        queryCommand.Parameters.AddWithValue("@battery", battery);
         queryCommand.Parameters.AddWithValue("@charge", charge);
         queryCommand.Parameters.AddWithValue("@totalRange", totalRange);
         queryCommand.Parameters.AddWithValue("@location", location);
@@ -183,7 +174,7 @@ public class ServiceEngineer : User
         queryCommand.Parameters.AddWithValue("@lastMaintenance", formattedDate);
 
         DatabaseHelper.ExecuteStatement(queryCommand);
-        Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt met ID: {id}", false);
+        Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt", false);
         Console.WriteLine("Scooter succesvol bijgewerkt.");
     }
 

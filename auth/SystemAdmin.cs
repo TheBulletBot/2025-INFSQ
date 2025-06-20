@@ -35,7 +35,8 @@ public class SystemAdmin : ServiceEngineer
         "Update Scooter info",
         "Delete Scooter",
         "Search Traveler",
-        "Return"
+        "Return",
+        "UpdateOwnAccount"
     };
 
         int selection = 0;
@@ -84,7 +85,7 @@ public class SystemAdmin : ServiceEngineer
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
                     case 11: BackupRestoreMenu(); break;
-                    case 12: ViewLogs(); break; 
+                    case 12: ViewLogs(); break;
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
                     case 15: DeleteTravelerMenu(); break;
@@ -92,7 +93,8 @@ public class SystemAdmin : ServiceEngineer
                     case 17: UpdateScooterMenu(); break;
                     case 18: DeleteScooterMenu(); break;
                     case 19: SearchAndPrintTravelersMenu(); break;
-                    case 20: return;
+                    case 20 : UpdateOwnAccountMenu(); break;
+                    case 21: return;
                 }
             }
         }
@@ -208,7 +210,7 @@ public class SystemAdmin : ServiceEngineer
         string encryptedCity = CryptographyHelper.Encrypt(city);
 
         string sql = $@"INSERT INTO Traveller 
-            (Id, Username, PasswordHash, FirstName, LastName, Birthday, Gender,
+            (Id,FirstName, LastName, Birthday, Gender,
              Street, HouseNumber, ZipCode, City, Mail, Phone, LicenseNumber, RegistrationDate)
             VALUES
             ('{Guid.NewGuid()}', '{username}', '{passwordHash}', '{firstName}', '{lastName}', '{birthday:yyyy-MM-dd}', '{gender}',
@@ -233,11 +235,24 @@ public class SystemAdmin : ServiceEngineer
 
         foreach (var user in users)
         {
-            Console.WriteLine($"UserName: {CryptographyHelper.Decrypt(user.Username),-15} | Rol: {user.Role}");
+            string decryptedUsername;
+            try
+            {
+                decryptedUsername = CryptographyHelper.Decrypt(user.Username);
+            }
+            catch
+            {
+                decryptedUsername = user.Username + " (niet versleuteld)";
+            }
+
+            Console.WriteLine($"UserName:  | Rol: {user.Role}");
         }
-        Logging.Log(this.Username, "Show All Users", $"Displayed each user and its role", false);
+
+        Logging.Log(this.Username, "Show All Users", "Displayed each user and its role", false);
         Console.ReadKey();
     }
+
+
 
     public void AddEngineerMenu()
     {
@@ -272,7 +287,7 @@ public class SystemAdmin : ServiceEngineer
         Logging.Log(this.Username, "Add Engineer", $"Nieuwe engineer toegevoegd met gebruikersnaam: {username}", false);
     }
 
-    public void AddEngineer(string username, string password,string firstName, string lastName)
+    public void AddEngineer(string username, string password, string firstName, string lastName)
     {
         //check if unique
         var Query = new SQLiteCommand("Select * FROM User u WHERE u.Username = @username");
@@ -602,7 +617,7 @@ public class SystemAdmin : ServiceEngineer
         var encryptedLicense = CryptographyHelper.Encrypt(newLicenseNumber);
 
         string oldEncryptedPhone = CryptographyHelper.Encrypt(oldPhoneNumber);
-        
+
         string sql = $@"
             UPDATE Traveler SET
                 Username = @username,
@@ -955,8 +970,145 @@ public class SystemAdmin : ServiceEngineer
         Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
+    public void UpdateScooter(string id, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
+    {
+        string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
+
+        string sql = @"UPDATE Scooter
+            SET Brand = @brand,
+                Model = @model,
+                TopSpeed = @topSpeed,
+                BatteryCapacity = @battery,
+                StateOfCharge = @charge,
+                TargetRange = @totalRange,
+                Location = @location,
+                OutOfService = @outOfService,
+                Mileage = @mileage,
+                LastMaintenance = @lastMaintenance
+            WHERE Id = @id";
+
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", id);
+        queryCommand.Parameters.AddWithValue("@brand", brand);
+        queryCommand.Parameters.AddWithValue("@model", model);
+        queryCommand.Parameters.AddWithValue("@topSpeed", topSpeed);
+        queryCommand.Parameters.AddWithValue("@battery", battery);
+        queryCommand.Parameters.AddWithValue("@charge", charge);
+        queryCommand.Parameters.AddWithValue("@totalRange", totalRange);
+        queryCommand.Parameters.AddWithValue("@location", location);
+        queryCommand.Parameters.AddWithValue("@outOfService", outOfService);
+        queryCommand.Parameters.AddWithValue("@mileage", mileage);
+        queryCommand.Parameters.AddWithValue("@lastMaintenance", formattedDate);
+
+        DatabaseHelper.ExecuteStatement(queryCommand);
+        Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt met ID: {id}", false);
+        Console.WriteLine("Scooter succesvol bijgewerkt.");
+    }
+
+    public void UpdateOwnAccount()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Voeg Service Engineer toe ===");
+
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
+
+        string password = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Wachtwoord:",
+            "Ongeldig wachtwoord. Het moet 12–30 tekens zijn, met minstens één hoofdletter, één cijfer en één speciaal teken."
+        );
+
+        string firstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
+
+        string lastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
+
+        AddEngineer(username, password, firstName, lastName);
+        Logging.Log(this.Username, "Add Engineer", $"Nieuwe engineer toegevoegd met gebruikersnaam: {username}", false);
+    }
+
+    public void UpdateOwnAccountMenu()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Update eigen account ===");
+
+        string newUsername;
+        while (true)
+        {
+            Console.Write("Nieuwe gebruikersnaam (leeg = geen wijziging): ");
+            newUsername = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(newUsername)) break;
+
+            if (!Regex.IsMatch(newUsername, Validation.UsernameRe))
+            {
+                Console.WriteLine("Ongeldige gebruikersnaam. Gebruik alleen toegestane tekens.");
+            }
+            else
+            {
+                break;
+            }
+        }
+        Console.Write("Nieuwe voornaam (leeg = geen wijziging): ");
+        string newFirstName = Console.ReadLine();
+
+        Console.Write("Nieuwe achternaam (leeg = geen wijziging): ");
+        string newLastName = Console.ReadLine();
+
+        UpdateOwnAccount(newUsername, newFirstName, newLastName);
 
 
+    }
+    public void UpdateOwnAccount(string newUsername, string newFirstName, string newLastName)
+    {
+        string sql = "UPDATE User SET ";
+        var sets = new List<string>();
+        var parameters = new List<SQLiteParameter>();
+        if (!string.IsNullOrWhiteSpace(newUsername))
+        {
+            sets.Add("Username = @username");
+            parameters.Add(new SQLiteParameter("@username", CryptographyHelper.Encrypt(newUsername)));
+        }
 
+        if (!string.IsNullOrWhiteSpace(newFirstName))
+        {
+            sets.Add("FirstName = @firstname");
+            parameters.Add(new SQLiteParameter("@firstname", CryptographyHelper.Encrypt(newFirstName)));
+        }
 
+        if (!string.IsNullOrWhiteSpace(newLastName))
+        {
+            sets.Add("LastName = @lastname");
+            parameters.Add(new SQLiteParameter("@lastname", CryptographyHelper.Encrypt(newLastName)));
+        }
+
+        if (sets.Count == 0)
+        {
+            Console.WriteLine("Geen gegevens om bij te werken.");
+            return;
+        }
+
+        sql += string.Join(", ", sets) + " WHERE Username = @currentUsername";
+        parameters.Add(new SQLiteParameter("@currentUsername", this.Username));
+
+        var command = new SQLiteCommand(sql);
+        foreach (var param in parameters)
+        {
+            command.Parameters.Add(param);
+        }
+
+        DatabaseHelper.ExecuteStatement(command);
+        Logging.Log(this.Username, "Update Own Account", "Gebruiker heeft eigen profiel aangepast", false);
+        Console.WriteLine("Accountgegevens succesvol bijgewerkt!");
+    }
 }
