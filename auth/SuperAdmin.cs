@@ -79,7 +79,7 @@ public class SuperAdmin : SystemAdmin
                     case 8: //UpdateOwnProfile 
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
-                    case 11: //RestoreBackup(); break;
+                    case 11: GenerateRestoreCodeForAdmin(); break;
                     case 12: ViewLogs(); break;
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
@@ -115,7 +115,7 @@ public class SuperAdmin : SystemAdmin
         querycommand.Parameters.AddWithValue("@last", CryptographyHelper.Encrypt(lastName));
         querycommand.Parameters.AddWithValue("@date", date);
 
-        DatabaseHelper.ExecuteStatement(cmd);
+        DatabaseHelper.ExecuteStatement(querycommand);
         Logging.Log(Username, "Add System Admin", $"Nieuwe System Admin toegevoegd: {username}", false);
         Console.WriteLine("System Admin toegevoegd!");
     }
@@ -301,9 +301,10 @@ public class SuperAdmin : SystemAdmin
         if (string.IsNullOrWhiteSpace(adminUsername))
         {
             Console.WriteLine("Ongeldige gebruikersnaam.");
+            Console.ReadLine();
             return;
         }
-        var checkCmd = new SQLiteCommand("SELECT COUNT(*) FROM User WHERE Username = @username AND Role = 'System Admin'");
+        var checkCmd = new SQLiteCommand("SELECT COUNT(*) FROM User WHERE Username = @username AND Role = 'ADMIN'");
         checkCmd.Parameters.AddWithValue("@username", CryptographyHelper.Encrypt(adminUsername));
         var count = DatabaseHelper.QueryAsScalar(checkCmd);
         if (count == 0)
@@ -344,10 +345,10 @@ public class SuperAdmin : SystemAdmin
         string code = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
 
         // Voeg toe aan BackupRestore-tabel
-        var insertCmd = new SQLiteCommand("INSERT INTO BackupRestore (RestoreCode, BackupFilePath, AdminId) VALUES (@code, @path, @admin)");
+        var insertCmd = new SQLiteCommand("INSERT INTO DBBackUp (BackupCode, DbPath, AdminId) VALUES (@code, @path, @admin)");
         insertCmd.Parameters.AddWithValue("@code", code);
         insertCmd.Parameters.AddWithValue("@path", selectedBackupPath);
-        insertCmd.Parameters.AddWithValue("@admin", adminUsername); 
+        insertCmd.Parameters.AddWithValue("@admin", adminUsername); super
 
         DatabaseHelper.ExecuteStatement(insertCmd);
 
