@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 public static class DatabaseHelper
 {
-    public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/db/INFSQScooterBackend.db");
+    public static string DatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..","..","..","db","db","INFSQScooterBackend.db");
     private static string readString = new SQLiteConnectionStringBuilder()
     {
         ReadOnly = true,

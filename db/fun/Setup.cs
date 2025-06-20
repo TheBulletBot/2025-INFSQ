@@ -32,7 +32,7 @@ public static class DBSetup
     }
     private static void CreateDBFile()
     {
-        File.Create(DatabaseHelper.DatabasePath);
+        File.WriteAllText(DatabaseHelper.DatabasePath, "");
     }
     private static bool IsDatabaseEmpty()
     {
@@ -63,7 +63,15 @@ public static class DBSetup
             );";
         using (var connection = new SQLiteConnection(ConnectionString))
         {
-            connection.Open();
+            try
+            {
+                connection.Open();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine( e);
+            }
+            
 
             using (var command = connection.CreateCommand())
             {
