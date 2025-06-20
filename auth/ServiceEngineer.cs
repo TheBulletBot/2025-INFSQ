@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 
 public class ServiceEngineer : User
@@ -144,18 +145,27 @@ public class ServiceEngineer : User
     }
     public void UpdateOwnPasswordMenu()
     {
-        Console.Clear();
-        Console.WriteLine("=== Change Password ===");
-        Console.Write("Enter your new password: ");
-        string newPassword = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(newPassword))
+        bool isPasswordValid = false;
+        while (!isPasswordValid)
         {
-            Console.WriteLine("Password cannot be empty. Please try again.");
-            return;
-        }
+            Console.Clear();
+            Console.WriteLine("=== Change Password ===");
+            Console.Write("Enter your new password: ");
+            string newPassword = Console.ReadLine();
 
-        UpdateOwnPassword(Username, newPassword);
+            if (string.IsNullOrWhiteSpace(newPassword))
+            {
+                Console.WriteLine("Password cannot be empty. Please try again.");
+                continue; //continue brings you to the next iteration in the loop
+            }
+            else if (Regex.IsMatch(newPassword, Validation.PasswordRe))
+            {
+                UpdateOwnPassword(Username, newPassword);
+                isPasswordValid = true;
+                break; //break exits the loop
+            }
+        }
+        
     }
     public void UpdateOwnPassword(string username, string newPassword) //(string OwnUserName)
     {
