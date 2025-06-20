@@ -3,24 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-
+using Microsoft.Data.Sqlite;
 
 public class ServiceEngineer : User
 {
-    // aanpassen tot de database maar ik heb geen idee (:
-    public ServiceEngineer(string username, string role) : base(username, role)
-    {
-
-    }
+    public ServiceEngineer(string username, string role) : base(username, role) { }
 
     public override void Menu()
     {
         string[] options = {
-        "Change password",
-        "Edit scooter attributes",
-        "Search scooter",
-        "Return"
-    };
+            "Change password",
+            "Edit scooter attributes",
+            "Search scooter",
+            "Return"
+        };
 
         int selection = 0;
         ConsoleKey key;
@@ -58,14 +54,12 @@ public class ServiceEngineer : User
                 {
                     case 0:
                         UpdateOwnPasswordMenu();
-                        //UpdateOwnPassword();
                         break;
                     case 1:
                         UpdateScooterMenu();
-                        //UpdateScooter();
                         break;
                     case 2:
-                        SearchScooterMenu(); 
+                        SearchScooterMenu();
                         break;
                     case 3:
                         return;
@@ -121,29 +115,42 @@ public class ServiceEngineer : User
         Console.WriteLine("\nDruk op een toets om terug te keren naar het menu");
         Console.ReadKey();
     }
+
     public void UpdateScooter(string id, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
         string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
 
-        string sql = $@"
-            UPDATE Scooter
-            SET Brand = '{brand}',
-                Model = '{model}',
-                TopSpeed = {topSpeed},
-                BatteryCapacity = {battery},
-                StateOfCharge = {charge},
-                TargetRange = {totalRange},
-                Location = '{location}',
-                OutOfService = {outOfService},
-                Mileage = {mileage},
-                LastMaintenance = '{formattedDate}'
-            WHERE Id = '{id}'
-        ";
+        string sql = @"UPDATE Scooter
+            SET Brand = @brand,
+                Model = @model,
+                TopSpeed = @topSpeed,
+                BatteryCapacity = @battery,
+                StateOfCharge = @charge,
+                TargetRange = @totalRange,
+                Location = @location,
+                OutOfService = @outOfService,
+                Mileage = @mileage,
+                LastMaintenance = @lastMaintenance
+            WHERE Id = @id";
 
-        DatabaseHelper.ExecuteStatement(sql);
+        var queryCommand = new SqliteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", id);
+        queryCommand.Parameters.AddWithValue("@brand", brand);
+        queryCommand.Parameters.AddWithValue("@model", model);
+        queryCommand.Parameters.AddWithValue("@topSpeed", topSpeed);
+        queryCommand.Parameters.AddWithValue("@battery", battery);
+        queryCommand.Parameters.AddWithValue("@charge", charge);
+        queryCommand.Parameters.AddWithValue("@totalRange", totalRange);
+        queryCommand.Parameters.AddWithValue("@location", location);
+        queryCommand.Parameters.AddWithValue("@outOfService", outOfService);
+        queryCommand.Parameters.AddWithValue("@mileage", mileage);
+        queryCommand.Parameters.AddWithValue("@lastMaintenance", formattedDate);
+
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt met ID: {id}", false);
         Console.WriteLine("Scooter succesvol bijgewerkt.");
     }
+
     public void UpdateOwnPasswordMenu()
     {
         bool isPasswordValid = false;
@@ -157,22 +164,27 @@ public class ServiceEngineer : User
             if (string.IsNullOrWhiteSpace(newPassword))
             {
                 Console.WriteLine("Password cannot be empty. Please try again.");
-                continue; //continue brings you to the next iteration in the loop
+                continue;
             }
             else if (Regex.IsMatch(newPassword, Validation.PasswordRe))
             {
                 UpdateOwnPassword(newPassword);
                 isPasswordValid = true;
-                break; //break exits the loop
+                break;
             }
         }
-
     }
+
     public void UpdateOwnPassword(string newPassword)
     {
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
-        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{this.Username}'";
-        DatabaseHelper.ExecuteStatement(sql);
+        string sql = "UPDATE User SET PasswordHash = @passwordHash WHERE Username = @username";
+
+        var command = new SqliteCommand(sql);
+        command.Parameters.AddWithValue("@passwordHash", passwordHash);
+        command.Parameters.AddWithValue("@username", this.Username);
+
+        DatabaseHelper.ExecuteStatement(command);
         Logging.Log(this.Username, "Change Password", "Gebruiker heeft zijn wachtwoord gewijzigd", true);
         Console.WriteLine("Je wachtwoord is succesvol gewijzigd.");
     }
@@ -196,21 +208,21 @@ public class ServiceEngineer : User
         Console.ReadKey();
     }
 
-
-
     public void SearchScooter(string keyword)
     {
-        string sql = $@"
-        SELECT * FROM Scooter
+        string sql = @"SELECT * FROM Scooter
         WHERE 
-            Id LIKE '%{keyword}%' OR
-            Brand LIKE '%{keyword}%' OR
-            Model LIKE '%{keyword}%' OR
-            Location LIKE '%{keyword}%' OR
-            SerialNumber LIKE '%{keyword}%' OR
-            LastMaintenance LIKE '%{keyword}%' OR
-        ";
-        var scooters = DatabaseHelper.Query<Scooter>(sql);
+            Id LIKE @keyword OR
+            Brand LIKE @keyword OR
+            Model LIKE @keyword OR
+            Location LIKE @keyword OR
+            SerialNumber LIKE @keyword OR
+            LastMaintenance LIKE @keyword";
+
+        var command = new SqliteCommand(sql);
+        command.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
+
+        var scooters = DatabaseHelper.Query<Scooter>(command);
 
         Console.WriteLine("\n--- Zoekresultaten voor scooters ---\n");
 
@@ -229,5 +241,4 @@ public class ServiceEngineer : User
         }
         Logging.Log(this.Username, "Search Scooter", $"Scooter gezocht met keyword: {keyword}", false);
     }
-
 }

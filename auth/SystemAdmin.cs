@@ -1,9 +1,12 @@
 ﻿
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 public class SystemAdmin : ServiceEngineer
 {
+
     public SystemAdmin(string username, string role) : base(username, role) { }
     private Dictionary<string, string> backupcode = new();
 
@@ -69,7 +72,7 @@ public class SystemAdmin : ServiceEngineer
                 {
                     case 0: UpdateOwnPasswordMenu(); break;
                     case 1: UpdateScooterMenu(); break;
-                    case 2: SearchScooterMenu(); break; 
+                    case 2: SearchScooterMenu(); break;
                     case 3: ShowAllUsersAndRoles(); break;
                     case 4: AddEngineerMenu(); break;
                     case 5: UpdateEngineerMenu(); break;
@@ -79,7 +82,7 @@ public class SystemAdmin : ServiceEngineer
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
                     case 11: BackupRestoreMenu(); break;
-                    //case 12: ViewLogs(); break; bestaat niet
+                    case 12: ViewLogs(); break; 
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
                     case 15: DeleteTravelerMenu(); break;
@@ -169,7 +172,7 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Wachtwoord moet minimaal 12 tekens zijn.");
 
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
 
         string encryptedPhone = CryptographyHelper.Encrypt(phone);
         string encryptedStreet = CryptographyHelper.Encrypt(street);
@@ -249,7 +252,7 @@ public class SystemAdmin : ServiceEngineer
         }
 
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
 
         string sql = $@"
             INSERT INTO User (Id, Username, PasswordHash, Role, FirstName, LastName, RegistrationDate)
@@ -739,6 +742,55 @@ public class SystemAdmin : ServiceEngineer
             }
         }
     }
+    public void ViewLogs()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Logboek bekijken ===\n");
+        string logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Logs");
+        if (!Directory.Exists(logsDir))
+        {
+            Console.WriteLine("❌ Geen logmap gevonden.");
+            Console.ReadKey();
+            return;
+        }
+        string[] logFiles = Directory.GetFiles(logsDir, "*.log");
+        if (logFiles.Length == 0)
+        {
+            Console.WriteLine(" Geen logbestanden gevonden.");
+            Console.ReadKey();
+            return;
+        }
+        foreach (var file in logFiles.OrderBy(f => f))
+        {
+            Console.WriteLine($"\n--- Logbestand: {Path.GetFileName(file)} ---\n");
+            try
+            {
+                string encryptedContent = File.ReadAllText(file);
+                string decryptedContent = CryptographyHelper.Decrypt(encryptedContent);
+                var logs = JsonSerializer.Deserialize<List<Logging.LogItem>>(decryptedContent);
+
+                foreach (var log in logs)
+                {
+                    Console.WriteLine($"ID: {log.Id}");
+                    Console.WriteLine($"Datum: {log.Date} {log.Time}");
+                    Console.WriteLine($"Gebruiker: {log.Username}");
+                    Console.WriteLine($"Actie: {log.Action}");
+                    Console.WriteLine($"Omschrijving: {log.Description}");
+                    Console.WriteLine($"Verdacht: {(log.Suspicious ? "Ja" : "Nee")}");
+                    Console.WriteLine("---------------------------");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Kon logbestand niet lezen: {ex.Message}");
+            }
+        }
+
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
+        Console.ReadKey();
+    }
+
+
 
 
 }
