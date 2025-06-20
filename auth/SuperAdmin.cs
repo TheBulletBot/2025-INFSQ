@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System.Data.SQLite;
 
 public class SuperAdmin : SystemAdmin
 {
@@ -105,7 +105,7 @@ public class SuperAdmin : SystemAdmin
         var cmd = @"
             INSERT INTO User (Id, Username, PasswordHash, Role)
             VALUES (@id, @username, @passwordHash, 'System Admin')";
-        var querycommand = new SqliteCommand(cmd);
+        var querycommand = new SQLiteCommand(cmd);
         querycommand.Parameters.AddWithValue("@id", id);
         querycommand.Parameters.AddWithValue("@username", username);
         querycommand.Parameters.AddWithValue("@passwordHash", passwordHash);
@@ -123,7 +123,7 @@ public class SuperAdmin : SystemAdmin
             UPDATE User
             SET Username = @newUsername, PasswordHash = @passwordHash
             WHERE Username = @currentUsername AND Role = 'System Admin'";
-        var cmd = new SqliteCommand(sql);
+        var cmd = new SQLiteCommand(sql);
         cmd.Parameters.AddWithValue("@newUsername", newUsername);
         cmd.Parameters.AddWithValue("@passwordHash", passwordHash);
         cmd.Parameters.AddWithValue("@currentUsername", currentUsername);
@@ -138,7 +138,7 @@ public class SuperAdmin : SystemAdmin
         var sql = @"
             DELETE FROM User
             WHERE Username = @username AND Role = 'System Admin'";
-        var cmd = new SqliteCommand(sql);
+        var cmd = new SQLiteCommand(sql);
         cmd.Parameters.AddWithValue("@username", username);
 
         DatabaseHelper.ExecuteStatement(cmd);
@@ -155,7 +155,7 @@ public class SuperAdmin : SystemAdmin
             UPDATE User
             SET PasswordHash = @passwordHash
             WHERE Username = @username AND Role = 'System Admin'";
-        var cmd = new SqliteCommand(sql);
+        var cmd = new SQLiteCommand(sql);
         cmd.Parameters.AddWithValue("@username", username);
         cmd.Parameters.AddWithValue("@passwordHash", passwordHash);
 

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Data.Sqlite;
 
 public class ServiceEngineer : User
 {
@@ -170,7 +169,7 @@ public class ServiceEngineer : User
                 LastMaintenance = @lastMaintenance
             WHERE Id = @id";
 
-        var queryCommand = new SqliteCommand(sql);
+        var queryCommand = new SQLiteCommand(sql);
         queryCommand.Parameters.AddWithValue("@id", id);
         queryCommand.Parameters.AddWithValue("@brand", brand);
         queryCommand.Parameters.AddWithValue("@model", model);
@@ -199,7 +198,7 @@ public class ServiceEngineer : User
             "Ongeldig wachtwoord. Het wachtwoord moet 12–30 tekens lang zijn en minstens één kleine letter, één hoofdletter, één cijfer en één speciaal teken bevatten."
         );
 
-        UpdateOwnPassword(Username, newPassword);
+        UpdateOwnPassword(newPassword);
     }
 
     public void UpdateOwnPassword(string newPassword)
@@ -207,7 +206,7 @@ public class ServiceEngineer : User
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = "UPDATE User SET PasswordHash = @passwordHash WHERE Username = @username";
 
-        var command = new SqliteCommand(sql);
+        var command = new SQLiteCommand(sql);
         command.Parameters.AddWithValue("@passwordHash", passwordHash);
         command.Parameters.AddWithValue("@username", this.Username);
 
@@ -247,7 +246,7 @@ public class ServiceEngineer : User
             SerialNumber LIKE @keyword OR
             LastMaintenance LIKE @keyword";
 
-        var command = new SqliteCommand(sql);
+        var command = new SQLiteCommand(sql);
         command.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
 
         var scooters = DatabaseHelper.Query<Scooter>(command);
