@@ -1,36 +1,38 @@
-﻿public class SuperAdmin : SystemAdmin
+﻿using System.Data.SQLite;
+
+public class SuperAdmin : SystemAdmin
 {
     public SuperAdmin(string username, string role) : base(username, role) { }
-    //Insert Menus for Admins here
+
     public override void Menu()
     {
         string[] options = {
-        "Change password",
-        "Edit scooter attributes",
-        "Search scooter",
-        "View all users",
-        "Add new Service Engineer",
-        "Update Service Engineer",
-        "Delete Service Engineer",
-        "Reset Service Engineer password",
-        "Update own profile",
-        "Delete own account",
-        "Backup system",
-        "Restore backup with code",
-        "View logs",
-        "Add new Traveler",
-        "Update Traveler info",
-        "Delete Traveler",
-        "Add new Scooter",
-        "Update Scooter info",
-        "Delete Scooter",
-        "Search Traveler",
-        "Add new System Administrator",
-        "Update System Administrator",
-        "Delete System Administrator",
-        "Reset System Admin password",
-        "Return"
-    };
+            "Change password",
+            "Edit scooter attributes",
+            "Search scooter",
+            "View all users",
+            "Add new Service Engineer",
+            "Update Service Engineer",
+            "Delete Service Engineer",
+            "Reset Service Engineer password",
+            "Update own profile",
+            "Delete own account",
+            "Backup system",
+            "Restore backup with code",
+            "View logs",
+            "Add new Traveler",
+            "Update Traveler info",
+            "Delete Traveler",
+            "Add new Scooter",
+            "Update Scooter info",
+            "Delete Scooter",
+            "Search Traveler",
+            "Add new System Administrator",
+            "Update System Administrator",
+            "Delete System Administrator",
+            "Reset System Admin password",
+            "Return"
+        };
 
         int selection = 0;
         ConsoleKey key;
@@ -68,17 +70,16 @@
                 {
                     case 0: UpdateOwnPasswordMenu(); break;
                     case 1: UpdateScooterMenu(); break;
-                    //case 2: SearchScooter(); break;
+                    case 2: SearchScooterMenu(); break;
                     case 3: ShowAllUsersAndRoles(); break;
                     case 4: AddEngineerMenu(); break;
                     case 5: UpdateEngineerMenu(); break;
                     case 6: DeleteEngineerMenu(); break;
                     case 7: ResetEngineerPasswordMenu(); break;
-                    //case 8: UpdateOwnPasswordMenu(); break; ???
                     case 9: DeleteOwnAccountMenu(); break;
-                    //case 10: BackupSystem(); break;
-                    //case 11: RestoreSystem(); break;
-                    //case 12: ViewLogs(); break;
+                    case 10: BackupMenu(); break;
+                    case 11: RestoreBackup(); break;
+                    case 12: ViewLogs(); break;
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
                     case 15: DeleteTravelerMenu(); break;
@@ -96,6 +97,73 @@
         }
     }
 
+    public void AddSystemAdmin(string username, string password)
+    {
+        string passwordHash = CryptographyHelper.CreateHashValue(password);
+        string id = Guid.NewGuid().ToString();
+
+        var cmd = @"
+            INSERT INTO User (Id, Username, PasswordHash, Role)
+            VALUES (@id, @username, @passwordHash, 'System Admin')";
+        var querycommand = new SQLiteCommand(cmd);
+        querycommand.Parameters.AddWithValue("@id", id);
+        querycommand.Parameters.AddWithValue("@username", username);
+        querycommand.Parameters.AddWithValue("@passwordHash", passwordHash);
+
+        DatabaseHelper.ExecuteStatement(cmd);
+        Logging.Log(Username, "Add System Admin", $"Nieuwe System Admin toegevoegd: {username}", false);
+        Console.WriteLine("System Admin toegevoegd!");
+    }
+
+    public void UpdateSystemAdmin(string currentUsername, string newUsername, string newPassword)
+    {
+        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
+
+        var sql  = @"
+            UPDATE User
+            SET Username = @newUsername, PasswordHash = @passwordHash
+            WHERE Username = @currentUsername AND Role = 'System Admin'";
+        var cmd = new SQLiteCommand(sql);
+        cmd.Parameters.AddWithValue("@newUsername", newUsername);
+        cmd.Parameters.AddWithValue("@passwordHash", passwordHash);
+        cmd.Parameters.AddWithValue("@currentUsername", currentUsername);
+
+        DatabaseHelper.ExecuteStatement(cmd);
+        Logging.Log(Username, "Update System Admin", $"System Admin {currentUsername} gewijzigd naar {newUsername}", false);
+        Console.WriteLine("System Admin bijgewerkt (of niet gevonden).");
+    }
+
+    public void DeleteSystemAdmin(string username)
+    {
+        var sql = @"
+            DELETE FROM User
+            WHERE Username = @username AND Role = 'System Admin'";
+        var cmd = new SQLiteCommand(sql);
+        cmd.Parameters.AddWithValue("@username", username);
+
+        DatabaseHelper.ExecuteStatement(cmd);
+        Logging.Log(Username, "Delete System Admin", $"System Admin verwijderd: {username}", true);
+        Console.WriteLine($"System Admin verwijderd: {username}");
+    }
+
+    public void ResetSystemAdminPassword(string username)
+    {
+        string tempPassword = "Temp" + new Random().Next(1000, 9999);
+        string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
+
+        var sql =@"
+            UPDATE User
+            SET PasswordHash = @passwordHash
+            WHERE Username = @username AND Role = 'System Admin'";
+        var cmd = new SQLiteCommand(sql);
+        cmd.Parameters.AddWithValue("@username", username);
+        cmd.Parameters.AddWithValue("@passwordHash", passwordHash);
+
+        DatabaseHelper.ExecuteStatement(cmd);
+        Logging.Log(Username, "Reset System Admin Password", $"Tijdelijk wachtwoord ingesteld voor: {username}", true);
+        Console.WriteLine($"Tijdelijk wachtwoord voor {username}: {tempPassword}");
+    }
+
     public void AddSystemAdminMenu()
     {
         Console.Clear();
@@ -103,6 +171,7 @@
         Console.Write("Gebruikersnaam: ");
         string username = Console.ReadLine();
         Console.Write("Wachtwoord: ");
+
         string password = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
@@ -112,20 +181,6 @@
         }
 
         AddSystemAdmin(username, password);
-    }
-
-    public void AddSystemAdmin(string username, string password)
-    {
-        string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string id = Guid.NewGuid().ToString();
-
-        string sql = $@"
-            INSERT INTO User (Id, Username, PasswordHash, Role)
-            VALUES ('{id}', '{username}', '{passwordHash}', 'System Admin')
-        ";
-
-        DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine("System Admin toegevoegd!");
     }
 
     public void UpdateSystemAdminMenu()
@@ -148,20 +203,6 @@
         UpdateSystemAdmin(currentUsername, newUsername, newPassword);
     }
 
-    public void UpdateSystemAdmin(string currentUsername, string newUsername, string newPassword)
-    {
-        string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
-
-        string sql = $@"
-            UPDATE User
-            SET Username = '{newUsername}', PasswordHash = '{passwordHash}'
-            WHERE Username = '{currentUsername}' AND Role = 'System Admin'
-        ";
-
-        DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine("System Admin bijgewerkt (of niet gevonden).");
-    }
-
     public void DeleteSystemAdminMenu()
     {
         Console.Clear();
@@ -178,17 +219,6 @@
         DeleteSystemAdmin(username);
     }
 
-    public void DeleteSystemAdmin(string username)
-    {
-        string sql = $@"
-            DELETE FROM User
-            WHERE Username = '{username}' AND Role = 'System Admin'
-        ";
-
-        DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine($"System Admin verwijderd: {username}");
-    }
-
     public void ResetSystemAdminPasswordMenu()
     {
         Console.Clear();
@@ -203,20 +233,5 @@
         }
 
         ResetSystemAdminPassword(username);
-    }
-
-    public void ResetSystemAdminPassword(string username)
-    {
-        string tempPassword = "Temp" + new Random().Next(1000, 9999);
-        string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
-
-        string sql = $@"
-            UPDATE User
-            SET PasswordHash = '{passwordHash}'
-            WHERE Username = '{username}' AND Role = 'System Admin'
-        ";
-
-        DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine($"Tijdelijk wachtwoord voor {username}: {tempPassword}");
     }
 }

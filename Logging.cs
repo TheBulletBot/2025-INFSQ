@@ -20,7 +20,7 @@ static class Logging
         var nextIdInLine = logs.Last().Id + 1;
 
         LogItem newLogItem = new(nextIdInLine, todayDateString, todayTimeString, username, action, description, isSuspicious);
-        logs.Append(newLogItem);
+        logs.Add(newLogItem);
         var writableJString = JsonSerializer.Serialize(logs);
         var encryptedWritableString = CryptographyHelper.Encrypt(writableJString);
 

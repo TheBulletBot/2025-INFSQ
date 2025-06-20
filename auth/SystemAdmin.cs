@@ -3,10 +3,14 @@ using System.ComponentModel;
 using System.Data.SQLite;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 public class SystemAdmin : ServiceEngineer
 {
+
     public SystemAdmin(string username, string role) : base(username, role) { }
+    private Dictionary<string, string> backupcode = new();
 
     public override void Menu()
     {
@@ -39,7 +43,7 @@ public class SystemAdmin : ServiceEngineer
 
         while (true)
         {
-            Console.Clear();
+
             Console.WriteLine($"=== System Administrator Menu ({Username}) ===");
 
             for (int i = 0; i < options.Length; i++)
@@ -70,7 +74,7 @@ public class SystemAdmin : ServiceEngineer
                 {
                     case 0: UpdateOwnPasswordMenu(); break;
                     case 1: UpdateScooterMenu(); break;
-                    //case 2: SearchScooter(); break; bestaat niet
+                    case 2: SearchScooterMenu(); break;
                     case 3: ShowAllUsersAndRoles(); break;
                     case 4: AddEngineerMenu(); break;
                     case 5: UpdateEngineerMenu(); break;
@@ -78,9 +82,9 @@ public class SystemAdmin : ServiceEngineer
                     case 7: ResetEngineerPasswordMenu(); break;
                     //case 8: UpdateOwnPasswordMenu(); break; ???
                     case 9: DeleteOwnAccountMenu(); break;
-                    //case 10: BackupSystem(); break; bestaat niet
-                    //case 11: RestoreSystem(); break; bestaat niet
-                    //case 12: ViewLogs(); break; bestaat niet
+                    case 10: BackupMenu(); break;
+                    case 11: BackupRestoreMenu(); break;
+                    case 12: ViewLogs(); break; 
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
                     case 15: DeleteTravelerMenu(); break;
@@ -193,11 +197,11 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Ongeldig telefoonnummer");
         if (!Regex.IsMatch(license, @"^[A-Z]{1,2}\d{7}$"))
             throw new ArgumentException("Ongeldig rijbewijsnummer");
-        if (!Regex.IsMatch(password,Validation.PasswordRe))
+        if (!Regex.IsMatch(password, Validation.PasswordRe))
             throw new ArgumentException("Wachtwoord moet minimaal 12 tekens zijn.");
 
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
 
         string encryptedPhone = CryptographyHelper.Encrypt(phone);
         string encryptedStreet = CryptographyHelper.Encrypt(street);
@@ -211,6 +215,7 @@ public class SystemAdmin : ServiceEngineer
              '{encryptedStreet}', '{houseNumber}', '{zipCode}', '{encryptedCity}', '{email}', '{encryptedPhone}', '{license}', '{registrationDate}')";
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "AddTraveler", $"Traveler {username} added", false);
         Console.WriteLine("Traveller succesvol toegevoegd.");
     }
 
@@ -298,6 +303,7 @@ public class SystemAdmin : ServiceEngineer
         Console.WriteLine("Service Engineer toegevoegd!");
     }
 
+
     public void UpdateEngineerMenu()
     {
         Console.Clear();
@@ -330,6 +336,7 @@ public class SystemAdmin : ServiceEngineer
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = $"UPDATE User SET Username = '{newUsername}', PasswordHash = '{passwordHash}' WHERE Username = '{currentUsername}' AND Role = 'Service Engineer'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(this.Username, "Update Engineer", $"Updated: {currentUsername}", false);
         Console.WriteLine("Service Engineer bijgewerkt.");
     }
 
@@ -380,6 +387,7 @@ public class SystemAdmin : ServiceEngineer
         var queryCommand = new SQLiteCommand(sql);
         queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
         queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        Logging.Log(Username, "ResetEngineerPassword", $"Password reset for {username}", true);
         DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine($"Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
     }
@@ -394,6 +402,7 @@ public class SystemAdmin : ServiceEngineer
             "Bevestig gebruikersnaam:",
             "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
         );
+        Logging.Log(Username, "DeleteOwnAccount", $"Deleted own account: {username}", true);
 
         DeleteOwnAccount(username);
     }
@@ -632,6 +641,7 @@ public class SystemAdmin : ServiceEngineer
 
 
         DatabaseHelper.ExecuteStatement(queryCommand);
+        Logging.Log(this.Username, "Update Traveller", $"Updated {oldFirstName} {oldLastName}", false);
         Console.WriteLine("Traveler succesvol bijgewerkt.");
     }
 
@@ -670,6 +680,7 @@ public class SystemAdmin : ServiceEngineer
         queryCommand.Parameters.AddWithValue("@lastname", CryptographyHelper.Encrypt(lastName));
         queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "DeleteTraveler", $"Traveler {firstName} {lastName} deleted", true);
         Console.WriteLine($"Traveler verwijderd: {firstName} {lastName}");
     }
 
@@ -766,6 +777,7 @@ public class SystemAdmin : ServiceEngineer
         queryCommand.Parameters.AddWithValue("@model", CryptographyHelper.Encrypt(model));
 
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "AddScooter", $"Scooter {brand} {model} added", false);
         Console.WriteLine("Scooter succesvol toegevoegd.");
     }
 
@@ -790,7 +802,161 @@ public class SystemAdmin : ServiceEngineer
     {
         string sql = $"DELETE FROM Scooter WHERE Id = '{scooterId}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(Username, "DeleteScooter", $"Scooter with ID {scooterId} deleted", true);
         Console.WriteLine($"Scooter met ID {scooterId} is verwijderd.");
     }
+    public void CreateSystemBackup()
+    {
+        Console.Clear();
+        string sourcePath = DatabaseHelper.DatabasePath;
+        string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/backups");
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string backupFileName = $"backup_{timestamp}.db";
+        string destinationPath = Path.Combine(backupDir, backupFileName);
+
+        if (!Directory.Exists(backupDir))
+        {
+            Directory.CreateDirectory(backupDir);
+        }
+
+        try
+        {
+            File.Copy(sourcePath, destinationPath);
+            string backupcode1 = Guid.NewGuid().ToString().Substring(0, 8);
+            backupcode[backupcode1] = destinationPath;
+            Logging.Log(Username, "CreateBackup", $"Backup created: {backupFileName}", false);
+            Console.WriteLine($" Backup succesvol opgeslagen als: {backupFileName}");
+            Console.WriteLine($" Herstelcode (eenmalig): {backupcode1}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($" Backup mislukt: {ex.Message}");
+        }
+
+    }
+
+    public void RestoreBackup()
+    {
+        Console.Clear();
+
+        Console.WriteLine("=== Restore System from Backup ===");
+        Console.Write("Enter the restore code: ");
+        string code = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(code) || !backupcode.ContainsKey(code))
+        {
+            Console.WriteLine("Ongeldige code of code al gebruikt.");
+        }
+        else
+        {
+            string backupPath = backupcode[code];
+            string originalPath = DatabaseHelper.DatabasePath;
+
+            try
+            {
+                File.Copy(backupPath, originalPath, overwrite: true);
+                Logging.Log(Username, "RestoreBackup", $"Restored from backup {backupPath}", true);
+                Console.WriteLine(" Backup herstel gelukt.");
+                backupcode.Remove(code);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Herstel mislukt : {ex.Message}");
+            }
+        }
+    }
+
+    public void BackupMenu()
+    {
+        Console.Clear();
+        while (true)
+        {
+
+            Console.WriteLine("=== Backup maken ===");
+            Console.Write("Wil je een backup maken? (j/n): ");
+            string antwoord = Console.ReadLine()?.Trim().ToLower();
+
+            if (antwoord == "j")
+            {
+                CreateSystemBackup();
+                break;
+            }
+            else if (antwoord == "n")
+            {
+                break;
+            }
+        }
+    }
+    public void BackupRestoreMenu()
+    {
+        Console.Clear();
+        while (true)
+        {
+
+            Console.WriteLine("=== Backup maken ===");
+            Console.Write("Wil je een backup herstellen (j/n): ");
+            string antwoord = Console.ReadLine()?.Trim().ToLower();
+
+            if (antwoord == "j")
+            {
+                RestoreBackup();
+                break;
+            }
+            else if (antwoord == "n")
+            {
+                break;
+            }
+        }
+    }
+    public void ViewLogs()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Logboek bekijken ===\n");
+        string logsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Logs");
+        if (!Directory.Exists(logsDir))
+        {
+            Console.WriteLine("❌ Geen logmap gevonden.");
+            Console.ReadKey();
+            return;
+        }
+        string[] logFiles = Directory.GetFiles(logsDir, "*.log");
+        if (logFiles.Length == 0)
+        {
+            Console.WriteLine(" Geen logbestanden gevonden.");
+            Console.ReadKey();
+            return;
+        }
+        foreach (var file in logFiles.OrderBy(f => f))
+        {
+            Console.WriteLine($"\n--- Logbestand: {Path.GetFileName(file)} ---\n");
+            try
+            {
+                string encryptedContent = File.ReadAllText(file);
+                string decryptedContent = CryptographyHelper.Decrypt(encryptedContent);
+                var logs = JsonSerializer.Deserialize<List<Logging.LogItem>>(decryptedContent);
+
+                foreach (var log in logs)
+                {
+                    Console.WriteLine($"ID: {log.Id}");
+                    Console.WriteLine($"Datum: {log.Date} {log.Time}");
+                    Console.WriteLine($"Gebruiker: {log.Username}");
+                    Console.WriteLine($"Actie: {log.Action}");
+                    Console.WriteLine($"Omschrijving: {log.Description}");
+                    Console.WriteLine($"Verdacht: {(log.Suspicious ? "Ja" : "Nee")}");
+                    Console.WriteLine("---------------------------");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Kon logbestand niet lezen: {ex.Message}");
+            }
+        }
+
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
+        Console.ReadKey();
+    }
+
+
+
 
 }
