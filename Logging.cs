@@ -9,7 +9,7 @@ static class Logging
         var today = DateTime.Now;
         var todayDateString = today.ToString("d");
         var todayTimeString = today.ToString("T");
-        var logFilePath = @"C:\Users\rensg\OneDrive\Documenten\GitHub\2025-INFSQ-2\Logs\20-06-2025.log";
+        var logFilePath = Path.Combine(projectRoot, $"LogFIles/{today:dd-MM-yyyy}.log");
         if (!File.Exists(logFilePath))
         {
             CreateLogFile(logFilePath,todayDateString, todayTimeString, username);
