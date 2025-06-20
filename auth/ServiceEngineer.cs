@@ -80,35 +80,71 @@ public class ServiceEngineer : User
         Console.Clear();
         Console.WriteLine("=== Scooter Bijwerken ===");
 
-        Console.Write("Voer het ID van de scooter in die je wilt bijwerken: ");
-        string id = Console.ReadLine();
+        string id = Validation.ValidatedInput(
+            Validation.IdRe,
+            "Voer het ID van de scooter in die je wilt bijwerken:",
+            "Ongeldig ID. Gebruik alleen cijfers."
+        );
 
-        Console.Write("Nieuw merk: ");
-        string brand = Console.ReadLine();
+        string brand = Validation.ValidatedInput(
+            Validation.BrandRe,
+            "Nieuw merk:",
+            "Ongeldig merk. Gebruik 2–20 letters, cijfers, spaties of streepjes."
+        );
 
-        Console.Write("Nieuw model: ");
-        string model = Console.ReadLine();
+        string model = Validation.ValidatedInput(
+            Validation.ModelRe,
+            "Nieuw model:",
+            "Ongeldig model. Gebruik 1–20 letters, cijfers, spaties of streepjes."
+        );
 
         Console.Write("Nieuwe topsnelheid (km/u): ");
-        int topSpeed = int.Parse(Console.ReadLine());
+        int topSpeed;
+        while (!int.TryParse(Console.ReadLine(), out topSpeed))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor de topsnelheid: ");
+        }
 
         Console.Write("Nieuwe batterijcapaciteit (Wh): ");
-        int battery = int.Parse(Console.ReadLine());
+        int battery;
+        while (!int.TryParse(Console.ReadLine(), out battery))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor de batterijcapaciteit: ");
+        }
 
         Console.Write("Nieuwe ladingstatus (%): ");
-        int charge = int.Parse(Console.ReadLine());
+        int charge;
+        while (!int.TryParse(Console.ReadLine(), out charge))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig percentage in voor de ladingstatus: ");
+        }
 
         Console.Write("Nieuw totaal bereik (km): ");
-        int totalRange = int.Parse(Console.ReadLine());
+        int totalRange;
+        while (!int.TryParse(Console.ReadLine(), out totalRange))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor het bereik: ");
+        }
 
-        Console.Write("Nieuwe locatie: ");
-        string location = Console.ReadLine();
+        string location = Validation.ValidatedInput(
+            Validation.LocationRe,
+            "Nieuwe locatie:",
+            "Ongeldige locatie. Gebruik 2–30 tekens, letters/cijfers/spaties/komma’s/punten/streepjes."
+        );
 
         Console.Write("Buiten dienst? (1 = ja, 0 = nee): ");
-        int outOfService = int.Parse(Console.ReadLine());
+        int outOfService;
+        while (!int.TryParse(Console.ReadLine(), out outOfService) || (outOfService != 0 && outOfService != 1))
+        {
+            Console.Write("Ongeldige invoer. Voer 1 in voor ja of 0 voor nee: ");
+        }
 
         Console.Write("Nieuwe kilometerstand (km): ");
-        int mileage = int.Parse(Console.ReadLine());
+        int mileage;
+        while (!int.TryParse(Console.ReadLine(), out mileage))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor de kilometerstand: ");
+        }
 
         Console.Write("Datum laatste onderhoud (YYYY-MM-DD): ");
         DateTime lastMaintenance;
@@ -119,7 +155,7 @@ public class ServiceEngineer : User
 
         UpdateScooter(id, brand, model, topSpeed, battery, charge, totalRange, location, outOfService, mileage, lastMaintenance);
 
-        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu");
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
     public void UpdateScooter(string id, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
@@ -161,27 +197,16 @@ public class ServiceEngineer : User
     }
     public void UpdateOwnPasswordMenu()
     {
-        bool isPasswordValid = false;
-        while (!isPasswordValid)
-        {
-            Console.Clear();
-            Console.WriteLine("=== Change Password ===");
-            Console.Write("Enter your new password: ");
-            string newPassword = Console.ReadLine();
+        Console.Clear();
+        Console.WriteLine("=== Wachtwoord wijzigen ===");
 
-            if (string.IsNullOrWhiteSpace(newPassword))
-            {
-                Console.WriteLine("Password cannot be empty. Please try again.");
-                continue; //continue brings you to the next iteration in the loop
-            }
-            else if (Regex.IsMatch(newPassword, Validation.PasswordRe))
-            {
-                UpdateOwnPassword(Username, newPassword);
-                isPasswordValid = true;
-                break; //break exits the loop
-            }
-        }
-        
+        string newPassword = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Voer uw nieuwe wachtwoord in:",
+            "Ongeldig wachtwoord. Het wachtwoord moet 12–30 tekens lang zijn en minstens één kleine letter, één hoofdletter, één cijfer en één speciaal teken bevatten."
+        );
+
+        UpdateOwnPassword(Username, newPassword);
     }
     public void UpdateOwnPassword(string username, string newPassword) //(string OwnUserName)
     {
