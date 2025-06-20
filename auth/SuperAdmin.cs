@@ -124,7 +124,7 @@ public class SuperAdmin : SystemAdmin
     {
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
 
-        var sql  = @"
+        var sql = @"
             UPDATE User
             SET Username = @newUsername, PasswordHash = @passwordHash
             WHERE Username = @currentUsername AND Role = 'System Admin'";
@@ -159,7 +159,7 @@ public class SuperAdmin : SystemAdmin
         string tempPassword = "Temp" + new Random().Next(1000, 9999);
         string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
 
-        var sql =@"
+        var sql = @"
             UPDATE User
             SET PasswordHash = @passwordHash
             WHERE Username = @username AND Role = 'System Admin'";
@@ -288,4 +288,46 @@ public class SuperAdmin : SystemAdmin
 
         ResetSystemAdminPassword(username);
     }
+
+    public void GenerateRestoreCodeForAdmin()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Genereer Restore Code voor Admin ===");
+        Console.Write("Gebruikersnaam van System Admin: ");
+        string adminUsername = Console.ReadLine();
+
+        Console.Write("Pad naar de backup die hersteld mag worden: ");
+        string backupPath = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(adminUsername) || string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
+        {
+            Console.WriteLine("Ongeldige gebruikersnaam of backuppad.");
+            return;
+        }
+
+        string restoreCode = Guid.NewGuid().ToString().Substring(0, 8); // kortere code
+        backupcode[restoreCode] = backupPath;
+
+        Logging.Log(Username, "Generate Restore Code", $"Restore-code gegenereerd voor {adminUsername}: {restoreCode}", false);
+        Console.WriteLine($"Restore-code gegenereerd: {restoreCode}");
+    }
+    public void RevokeRestoreCode()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Herstelcode intrekken ===");
+        Console.Write("Voer de code in die ingetrokken moet worden: ");
+        string code = Console.ReadLine();
+
+        if (!backupcode.ContainsKey(code))
+        {
+            Console.WriteLine("Code bestaat niet.");
+            return;
+        }
+
+        backupcode.Remove(code);
+        Logging.Log(Username, "Revoke Restore Code", $"Restore-code ingetrokken: {code}", true);
+        Console.WriteLine("Code succesvol verwijderd.");
+    }
+
+    
 }

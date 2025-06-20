@@ -68,7 +68,7 @@ public class ServiceEngineer : User
         }
     }
 
-    public void UpdateScooterMenu()
+    public  void UpdateScooterMenu()
     {
         Console.Clear();
         Console.WriteLine("=== Scooter Bijwerken ===");
@@ -157,10 +157,6 @@ public class ServiceEngineer : User
         string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
 
         string sql = @"UPDATE Scooter
-            SET Brand = @brand,
-                Model = @model,
-                TopSpeed = @topSpeed,
-                BatteryCapacity = @battery,
                 StateOfCharge = @charge,
                 TargetRange = @totalRange,
                 Location = @location,
