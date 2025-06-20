@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 
 public class ServiceEngineer : User
@@ -56,9 +57,11 @@ public class ServiceEngineer : User
             switch (selection)
             {
                 case 0:
+                    UpdateOwnPasswordMenu();
                     //UpdateOwnPassword();
                     break;
                 case 1:
+                    UpdateScooterMenu();
                     //UpdateScooter();
                     break;
                 case 2:
@@ -71,6 +74,53 @@ public class ServiceEngineer : User
     }
 }
 
+    public void UpdateScooterMenu()
+    {
+        Console.Clear();
+        Console.WriteLine("=== Scooter Bijwerken ===");
+
+        Console.Write("Voer het ID van de scooter in die je wilt bijwerken: ");
+        string id = Console.ReadLine();
+
+        Console.Write("Nieuw merk: ");
+        string brand = Console.ReadLine();
+
+        Console.Write("Nieuw model: ");
+        string model = Console.ReadLine();
+
+        Console.Write("Nieuwe topsnelheid (km/u): ");
+        int topSpeed = int.Parse(Console.ReadLine());
+
+        Console.Write("Nieuwe batterijcapaciteit (Wh): ");
+        int battery = int.Parse(Console.ReadLine());
+
+        Console.Write("Nieuwe ladingstatus (%): ");
+        int charge = int.Parse(Console.ReadLine());
+
+        Console.Write("Nieuw totaal bereik (km): ");
+        int totalRange = int.Parse(Console.ReadLine());
+
+        Console.Write("Nieuwe locatie: ");
+        string location = Console.ReadLine();
+
+        Console.Write("Buiten dienst? (1 = ja, 0 = nee): ");
+        int outOfService = int.Parse(Console.ReadLine());
+
+        Console.Write("Nieuwe kilometerstand (km): ");
+        int mileage = int.Parse(Console.ReadLine());
+
+        Console.Write("Datum laatste onderhoud (YYYY-MM-DD): ");
+        DateTime lastMaintenance;
+        while (!DateTime.TryParse(Console.ReadLine(), out lastMaintenance))
+        {
+            Console.Write("Ongeldige datum. Probeer opnieuw (YYYY-MM-DD): ");
+        }
+
+        UpdateScooter(id, brand, model, topSpeed, battery, charge, totalRange, location, outOfService, mileage, lastMaintenance);
+
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu");
+        Console.ReadKey();
+    }
     public void UpdateScooter(string id, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
         string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
@@ -92,6 +142,30 @@ public class ServiceEngineer : User
 
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine("Scooter succesvol bijgewerkt.");
+    }
+    public void UpdateOwnPasswordMenu()
+    {
+        bool isPasswordValid = false;
+        while (!isPasswordValid)
+        {
+            Console.Clear();
+            Console.WriteLine("=== Change Password ===");
+            Console.Write("Enter your new password: ");
+            string newPassword = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(newPassword))
+            {
+                Console.WriteLine("Password cannot be empty. Please try again.");
+                continue; //continue brings you to the next iteration in the loop
+            }
+            else if (Regex.IsMatch(newPassword, Validation.PasswordRe))
+            {
+                UpdateOwnPassword(Username, newPassword);
+                isPasswordValid = true;
+                break; //break exits the loop
+            }
+        }
+        
     }
     public void UpdateOwnPassword(string username, string newPassword) //(string OwnUserName)
     {

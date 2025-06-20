@@ -3,6 +3,9 @@ using System.Text.RegularExpressions;
 
 public static class Validation
 {
-    static Regex UsernameRe = new("""[a-zA-Z\.'0-9_]{8,10}""");
-    static Regex PasswordRe = new("""^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{11,30})\S$""");
+    public static readonly string UsernameRe = @"[a-zA-Z\.'0-9_]{8,10}";
+    public static readonly string PasswordRe = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~!@#$%&_\-+=`|\\(){}\[\]:;'<>,.?/])[a-zA-Z\d~!@#$%&_\-+=`|\\(){}\[\]:;'<>,.?/]{12,30}$";
+    public static readonly string ZipCodeRe = @"^\d{4}[A-Z]{2}$";
+    public static readonly string PhoneRe = @"^\d{8}$";
+    public static readonly string LicenseRe = @"^[A-Z]{1,2}\d{7}$";
 }
