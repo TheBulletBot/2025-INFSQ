@@ -18,6 +18,7 @@ public static class DBSetup
             InitScooterTable();
             InitTravelerTable();
             InitUserTable();
+            InitDBBackupTable();
         }
         if (IsDatabaseEmpty())
         {
@@ -221,5 +222,15 @@ public static class DBSetup
         VALUES(1,'{encryptedUsername1}','{hashedPassword}','ADMIN','Moo','Snuckle','18-06-2025')
         ");
         Console.WriteLine("Inserted Seed data into User.");
+    }
+
+    private static void InitDBBackupTable()
+    {
+        DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
+        DBBackup(
+        AdminId TEXT NOT NULL,
+        BackupCode TEXT NOT NULL);
+        ");
+        Console.WriteLine("Created User Table.");
     }
 }
