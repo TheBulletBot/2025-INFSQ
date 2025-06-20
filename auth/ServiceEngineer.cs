@@ -10,69 +10,69 @@ public class ServiceEngineer : User
     // aanpassen tot de database maar ik heb geen idee (:
     public ServiceEngineer(string username, string role) : base(username, role)
     {
-     
+
     }
 
     public override void Menu()
-{
-    string[] options = {
+    {
+        string[] options = {
         "Change password",
         "Edit scooter attributes",
         "Search scooter",
         "Return"
     };
 
-    int selection = 0;
-    ConsoleKey key;
+        int selection = 0;
+        ConsoleKey key;
 
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine($"=== Service Engineer Menu ({Username}) ===");
-
-        for (int i = 0; i < options.Length; i++)
+        while (true)
         {
-            if (i == selection)
-            {
-                Console.BackgroundColor = ConsoleColor.Gray;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.WriteLine($"> {options[i]}");
-                Console.ResetColor();
-            }
-            else
-            {
-                Console.WriteLine($"  {options[i]}");
-            }
-        }
+            Console.Clear();
+            Console.WriteLine($"=== Service Engineer Menu ({Username}) ===");
 
-        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-        key = keyInfo.Key;
-
-        if (key == ConsoleKey.UpArrow)
-            selection = (selection - 1 + options.Length) % options.Length;
-        else if (key == ConsoleKey.DownArrow)
-            selection = (selection + 1) % options.Length;
-        else if (key == ConsoleKey.Enter)
-        {
-            switch (selection)
+            for (int i = 0; i < options.Length; i++)
             {
-                case 0:
-                    UpdateOwnPasswordMenu();
-                    //UpdateOwnPassword();
-                    break;
-                case 1:
-                    UpdateScooterMenu();
-                    //UpdateScooter();
-                    break;
-                case 2:
-                    //SearchScooter();
-                    break;
-                case 3:
-                    return;
+                if (i == selection)
+                {
+                    Console.BackgroundColor = ConsoleColor.Gray;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.WriteLine($"> {options[i]}");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.WriteLine($"  {options[i]}");
+                }
+            }
+
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            key = keyInfo.Key;
+
+            if (key == ConsoleKey.UpArrow)
+                selection = (selection - 1 + options.Length) % options.Length;
+            else if (key == ConsoleKey.DownArrow)
+                selection = (selection + 1) % options.Length;
+            else if (key == ConsoleKey.Enter)
+            {
+                switch (selection)
+                {
+                    case 0:
+                        UpdateOwnPasswordMenu();
+                        //UpdateOwnPassword();
+                        break;
+                    case 1:
+                        UpdateScooterMenu();
+                        //UpdateScooter();
+                        break;
+                    case 2:
+                        //SearchScooter();
+                        break;
+                    case 3:
+                        return;
+                }
             }
         }
     }
-}
 
     public void UpdateScooterMenu()
     {
@@ -160,19 +160,51 @@ public class ServiceEngineer : User
             }
             else if (Regex.IsMatch(newPassword, Validation.PasswordRe))
             {
-                UpdateOwnPassword(Username, newPassword);
+                UpdateOwnPassword(newPassword);
                 isPasswordValid = true;
                 break; //break exits the loop
             }
         }
-        
+
     }
-    public void UpdateOwnPassword(string username, string newPassword) //(string OwnUserName)
+    public void UpdateOwnPassword(string newPassword)
     {
-        // kan nu nog alle ww veranderen 
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
-        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}'";
+        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{this.Username}'";
         DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine("Je account is bijgewerkt.");
+        Console.WriteLine("Je wachtwoord is succesvol gewijzigd.");
     }
+
+    
+    public void SearchScooter(string keyword)
+    {
+        string sql = $@"
+        SELECT * FROM Scooter
+        WHERE 
+            Id LIKE '%{keyword}%' OR
+            Brand LIKE '%{keyword}%' OR
+            Model LIKE '%{keyword}%' OR
+            Location LIKE '%{keyword}%' OR
+            SerialNumber LIKE '%{keyword}%' OR
+            LastMaintenance LIKE '%{keyword}%' OR
+        ";
+        var scooters = DatabaseHelper.Query<Scooter>(sql);
+
+        Console.WriteLine("\n--- Zoekresultaten voor scooters ---\n");
+
+        if (scooters.Count == 0)
+        {
+            Console.WriteLine("Geen scooters gevonden die overeenkomen met de zoekterm.");
+            return;
+        }
+
+        foreach (var s in scooters)
+        {
+            Console.WriteLine(
+                $"ID: {s.SerialNumber}\nMerk: {s.Brand}\nModel: {s.Model}\nSnelheid: {s.TopSpeed} km/u\n" +
+                $"Batterij: {s.BatteryCapacity} Wh\nLading: {s.StateOfCharge}%\nLocatie: {s.Location}\n" +
+                $"Onderhoud: {s.LastMaintenance:yyyy-MM-dd}\n--------------------------");
+        }
+    }
+
 }

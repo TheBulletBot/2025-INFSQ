@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 public class SystemAdmin : ServiceEngineer
 {
     public SystemAdmin(string username, string role) : base(username, role) { }
+    private Dictionary<string, string> backupcode = new();
 
     public override void Menu()
     {
@@ -37,7 +38,7 @@ public class SystemAdmin : ServiceEngineer
 
         while (true)
         {
-            Console.Clear();
+
             Console.WriteLine($"=== System Administrator Menu ({Username}) ===");
 
             for (int i = 0; i < options.Length; i++)
@@ -76,8 +77,8 @@ public class SystemAdmin : ServiceEngineer
                     case 7: ResetEngineerPasswordMenu(); break;
                     //case 8: UpdateOwnPasswordMenu(); break; ???
                     case 9: DeleteOwnAccountMenu(); break;
-                    //case 10: BackupSystem(); break; bestaat niet
-                    //case 11: RestoreSystem(); break; bestaat niet
+                    //case 10: BackupMenu(); break;
+                    //case 11: BackupRestoreMenu(); break;
                     //case 12: ViewLogs(); break; bestaat niet
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
@@ -164,7 +165,7 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Ongeldig telefoonnummer");
         if (!Regex.IsMatch(license, @"^[A-Z]{1,2}\d{7}$"))
             throw new ArgumentException("Ongeldig rijbewijsnummer");
-        if (!Regex.IsMatch(password,Validation.PasswordRe))
+        if (!Regex.IsMatch(password, Validation.PasswordRe))
             throw new ArgumentException("Wachtwoord moet minimaal 12 tekens zijn.");
 
         string passwordHash = CryptographyHelper.CreateHashValue(password);
@@ -207,27 +208,57 @@ public class SystemAdmin : ServiceEngineer
     {
         Console.Clear();
         Console.WriteLine("=== Voeg Service Engineer toe ===");
+
         Console.Write("Gebruikersnaam: ");
         string username = Console.ReadLine();
+
         Console.Write("Wachtwoord: ");
         string password = Console.ReadLine();
 
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        Console.Write("Voornaam: ");
+        string firstName = Console.ReadLine();
+
+        Console.Write("Achternaam: ");
+        string lastName = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
+            string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
         {
-            Console.WriteLine("Gebruikersnaam en wachtwoord mogen niet leeg zijn.");
+            Console.WriteLine("Alle velden zijn verplicht.");
             return;
         }
 
-        AddEngineer(username, password);
+        AddEngineer(username, password, firstName, lastName);
     }
 
-    public void AddEngineer(string username, string password)
+
+    public void AddEngineer(string username, string password, string firstName, string lastName)
     {
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
+            string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        {
+            Console.WriteLine("Alle velden zijn verplicht.");
+            return;
+        }
+
+        if (!Regex.IsMatch(password, Validation.PasswordRe))
+        {
+            Console.WriteLine("Wachtwoord voldoet niet aan de eisen.");
+            return;
+        }
+
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string sql = $"INSERT INTO User (Id, Username, PasswordHash, Role) VALUES ('{Guid.NewGuid()}', '{username}', '{passwordHash}', 'Service Engineer')";
+        string registrationDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+
+        string sql = $@"
+            INSERT INTO User (Id, Username, PasswordHash, Role, FirstName, LastName, RegistrationDate)
+            VALUES ('{Guid.NewGuid()}', '{username}', '{passwordHash}', 'Service Engineer', '{firstName}', '{lastName}', '{registrationDate}')
+        ";
+
         DatabaseHelper.ExecuteStatement(sql);
-        Console.WriteLine("Service Engineer toegevoegd!");
+        Console.WriteLine("Service Engineer succesvol toegevoegd!");
     }
+
 
     public void UpdateEngineerMenu()
     {
@@ -438,10 +469,10 @@ public class SystemAdmin : ServiceEngineer
         Console.ReadKey();
     }
 
-        public void UpdateTraveler(string oldFirstName, string oldLastName, string oldPhoneNumber,
-                            string newUsername, string newPassword, string newFirstName, string newLastName, DateTime newBirthDate,
-                            string newGender, string newStreet, string newHouseNumber, string newZipCode, string newCity,
-                            string newEmail, string newPhoneNumber, string newLicenseNumber)
+    public void UpdateTraveler(string oldFirstName, string oldLastName, string oldPhoneNumber,
+                        string newUsername, string newPassword, string newFirstName, string newLastName, DateTime newBirthDate,
+                        string newGender, string newStreet, string newHouseNumber, string newZipCode, string newCity,
+                        string newEmail, string newPhoneNumber, string newLicenseNumber)
     {
         if (!Regex.IsMatch(newZipCode, @"^\d{4}[A-Z]{2}$"))
             throw new ArgumentException("Ongeldige postcode");
@@ -482,7 +513,8 @@ public class SystemAdmin : ServiceEngineer
         Console.WriteLine("Traveler succesvol bijgewerkt.");
     }
 
-    public void DeleteTravelerMenu() { 
+    public void DeleteTravelerMenu()
+    {
         Console.Clear();
         Console.WriteLine("=== Verwijder Traveler ===");
 
@@ -593,6 +625,65 @@ public class SystemAdmin : ServiceEngineer
         string sql = $"DELETE FROM Scooter WHERE Id = '{scooterId}'";
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine($"Scooter met ID {scooterId} is verwijderd.");
+    }
+    public void CreateSystemBackup()
+    {
+        Console.Clear();
+        string sourcePath = DatabaseHelper.DatabasePath;
+        string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../db/backups");
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string backupFileName = $"backup_{timestamp}.db";
+        string destinationPath = Path.Combine(backupDir, backupFileName);
+
+        if (!Directory.Exists(backupDir))
+        {
+            Directory.CreateDirectory(backupDir);
+        }
+
+        try
+        {
+            File.Copy(sourcePath, destinationPath);
+            string backupcode1 = Guid.NewGuid().ToString().Substring(0, 8);
+            backupcode[backupcode1] = destinationPath;
+
+            Console.WriteLine($" Backup succesvol opgeslagen als: {backupFileName}");
+            Console.WriteLine($" Herstelcode (eenmalig): {backupcode1}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($" Backup mislukt: {ex.Message}");
+        }
+
+    }
+
+    public void RestoreBackup()
+    {
+        Console.Clear();
+
+        Console.WriteLine("=== Restore System from Backup ===");
+        Console.Write("Enter the restore code: ");
+        string code = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(code) || !backupcode.ContainsKey(code))
+        {
+            Console.WriteLine("Ongeldige code of code al gebruikt.");
+        }
+        else
+        {
+            string backupPath = backupcode[code];
+            string originalPath = DatabaseHelper.DatabasePath;
+
+            try
+            {
+                File.Copy(backupPath, originalPath, overwrite: true);
+                Console.WriteLine(" Backup herstel gelukt.");
+                backupcode.Remove(code);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Herstel mislukt : {ex.Message}");
+            }
+        }
     }
 
 }

@@ -76,7 +76,7 @@
                     case 7: ResetEngineerPasswordMenu(); break;
                     //case 8: UpdateOwnPasswordMenu(); break; ???
                     case 9: DeleteOwnAccountMenu(); break;
-                    //case 10: BackupSystem(); break;
+                    //case 10: BackupMenu(); break;
                     //case 11: RestoreSystem(); break;
                     //case 12: ViewLogs(); break;
                     case 13: AddTravelerMenu(); break;
@@ -103,6 +103,7 @@
         Console.Write("Gebruikersnaam: ");
         string username = Console.ReadLine();
         Console.Write("Wachtwoord: ");
+
         string password = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
@@ -219,4 +220,6 @@
         DatabaseHelper.ExecuteStatement(sql);
         Console.WriteLine($"Tijdelijk wachtwoord voor {username}: {tempPassword}");
     }
+    
+
 }
