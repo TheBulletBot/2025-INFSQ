@@ -1,6 +1,6 @@
 using System.Collections;
+using System.Data.SQLite;
 using System.Security.Cryptography;
-using Microsoft.Data.Sqlite;
 
 public static class Login
 {
@@ -43,8 +43,8 @@ public static class Login
 
             // Probeer gebruiker op te halen uit database
             var query = @"SELECT * FROM User u WHERE u.Username = @username";
-            var cmd = new SqliteCommand(query);
-            cmd.Parameters.Add(new SqliteParameter("@username", usernameEncrypted));
+            var cmd = new SQLiteCommand(query);
+            cmd.Parameters.Add(new SQLiteParameter("@username", usernameEncrypted));
             var result = DatabaseHelper.Query<DBUser>(cmd);
 
             if (result.Count <= 0)

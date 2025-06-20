@@ -1,4 +1,6 @@
 ﻿
+using System.ComponentModel;
+using System.Data.SQLite;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
@@ -101,17 +103,29 @@ public class SystemAdmin : ServiceEngineer
         Console.Clear();
         Console.WriteLine("=== Voeg Traveler toe ===");
 
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Gebruik 8–10 tekens met letters, cijfers, punten of underscores."
+        );
 
-        Console.Write("Wachtwoord: ");
-        string password = Console.ReadLine();
+        string password = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Wachtwoord:",
+            "Ongeldig wachtwoord. Gebruik 12–30 tekens met hoofdletter, kleine letter, cijfer en speciaal teken."
+        );
 
-        Console.Write("Voornaam: ");
-        string firstName = Console.ReadLine();
+        string firstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
-        Console.Write("Achternaam: ");
-        string lastName = Console.ReadLine();
+        string lastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
         Console.Write("Geboortedatum (yyyy-MM-dd): ");
         DateTime birthday;
@@ -129,20 +143,35 @@ public class SystemAdmin : ServiceEngineer
         Console.Write("Huisnummer: ");
         string houseNumber = Console.ReadLine();
 
-        Console.Write("Postcode (1234AB): ");
-        string zipCode = Console.ReadLine();
+        string zipCode = Validation.ValidatedInput(
+            Validation.ZipCodeRe,
+            "Postcode (1234AB):",
+            "Ongeldige postcode. Gebruik het formaat 1234AB."
+        );
 
-        Console.Write("Woonplaats: ");
-        string city = Console.ReadLine();
+        string city = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Woonplaats:",
+            "Ongeldige woonplaats. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
-        Console.Write("E-mailadres: ");
-        string email = Console.ReadLine();
+        string email = Validation.ValidatedInput(
+            Validation.EmailRe,
+            "E-mailadres:",
+            "Ongeldig e-mailadres. Gebruik een geldig formaat zoals voorbeeld@domein.nl."
+        );
 
-        Console.Write("Telefoonnummer (8 cijfers): ");
-        string phone = Console.ReadLine();
+        string phone = Validation.ValidatedInput(
+            Validation.PhoneRe,
+            "Telefoonnummer (8 cijfers):",
+            "Ongeldig telefoonnummer. Gebruik precies 8 cijfers."
+        );
 
-        Console.Write("Rijbewijsnummer (A1234567): ");
-        string license = Console.ReadLine();
+        string license = Validation.ValidatedInput(
+            Validation.LicenseRe,
+            "Rijbewijsnummer (A1234567):",
+            "Ongeldig rijbewijsnummer. Gebruik 1–2 hoofdletters gevolgd door 7 cijfers."
+        );
 
         try
         {
@@ -153,7 +182,7 @@ public class SystemAdmin : ServiceEngineer
             Console.WriteLine($"Fout bij toevoegen van traveler: {ex.Message}");
         }
 
-        Console.WriteLine("Druk op een toets om terug te keren naar het menu.");
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
 
@@ -204,8 +233,10 @@ public class SystemAdmin : ServiceEngineer
 
         foreach (var user in users)
         {
-            Console.WriteLine($"UserName: {user.Username,-15} | Rol: {user.Role}");
+            Console.WriteLine($"UserName: {CryptographyHelper.Decrypt(user.Username),-15} | Rol: {user.Role}");
         }
+        Logging.Log(this.Username, "Show All Users", $"Displayed each user and its role", false);
+        Console.ReadKey();
     }
 
     public void AddEngineerMenu()
@@ -213,55 +244,63 @@ public class SystemAdmin : ServiceEngineer
         Console.Clear();
         Console.WriteLine("=== Voeg Service Engineer toe ===");
 
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
-        Console.Write("Wachtwoord: ");
-        string password = Console.ReadLine();
+        string password = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Wachtwoord:",
+            "Ongeldig wachtwoord. Het moet 12–30 tekens zijn, met minstens één hoofdletter, één cijfer en één speciaal teken."
+        );
 
-        Console.Write("Voornaam: ");
-        string firstName = Console.ReadLine();
+        string firstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
-        Console.Write("Achternaam: ");
-        string lastName = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
-            string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
-        {
-            Console.WriteLine("Alle velden zijn verplicht.");
-            return;
-        }
+        string lastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
         AddEngineer(username, password, firstName, lastName);
+        Logging.Log(this.Username, "Add Engineer", $"Nieuwe engineer toegevoegd met gebruikersnaam: {username}", false);
     }
 
-
-    public void AddEngineer(string username, string password, string firstName, string lastName)
+    public void AddEngineer(string username, string password,string firstName, string lastName)
     {
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
-            string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        //check if unique
+        var Query = new SQLiteCommand("Select * FROM User u WHERE u.Username = @username");
+        Query.Parameters.AddWithValue("@username", username);
+        var result = DatabaseHelper.Query<User>(Query);
+        if (result.Count > 0)
         {
-            Console.WriteLine("Alle velden zijn verplicht.");
+            Console.WriteLine("Username already in use, Try again");
             return;
         }
-
-        if (!Regex.IsMatch(password, Validation.PasswordRe))
-        {
-            Console.WriteLine("Wachtwoord voldoet niet aan de eisen.");
-            return;
-        }
-
         string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
+        string encryptedUsername = CryptographyHelper.Encrypt(username);
+        var registrationDate = DateTime.Now.ToString("dd-MM-yyyy");
+        string encryptedFirstName = CryptographyHelper.Encrypt(firstName);
+        string encryptedLastName = CryptographyHelper.Encrypt(lastName);
+        string sql = @"INSERT INTO User (Id, Username, PasswordHash, Role,FirstName, LastName, RegistrationDate) 
+        VALUES (@id, @username, @password, 'Service Engineer',@firstname, @lastname, @registrationdate)";
 
-        string sql = $@"
-            INSERT INTO User (Id, Username, PasswordHash, Role, FirstName, LastName, RegistrationDate)
-            VALUES ('{Guid.NewGuid()}', '{username}', '{passwordHash}', 'Service Engineer', '{firstName}', '{lastName}', '{registrationDate}')
-        ";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", Guid.NewGuid());
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        queryCommand.Parameters.AddWithValue("@firstname", encryptedFirstName);
+        queryCommand.Parameters.AddWithValue("@lastname", encryptedLastName);
+        queryCommand.Parameters.AddWithValue("@registrationdate", registrationDate);
 
-        DatabaseHelper.ExecuteStatement(sql);
-        Logging.Log(Username, "AddEngineer", $"Engineer {username} added", false);
-        Console.WriteLine("Service Engineer succesvol toegevoegd!");
+        DatabaseHelper.ExecuteStatement(queryCommand);
+        Console.WriteLine("Service Engineer toegevoegd!");
     }
 
 
@@ -269,20 +308,27 @@ public class SystemAdmin : ServiceEngineer
     {
         Console.Clear();
         Console.WriteLine("=== Pas Service Engineer aan ===");
-        Console.Write("Huidige gebruikersnaam: ");
-        string currentUsername = Console.ReadLine();
-        Console.Write("Nieuwe gebruikersnaam: ");
-        string newUsername = Console.ReadLine();
-        Console.Write("Nieuwe wachtwoord: ");
-        string newPassword = Console.ReadLine();
 
-        if (string.IsNullOrWhiteSpace(currentUsername) || string.IsNullOrWhiteSpace(newUsername) || string.IsNullOrWhiteSpace(newPassword))
-        {
-            Console.WriteLine("Gebruikersnaam en wachtwoord mogen niet leeg zijn.");
-            return;
-        }
+        string currentUsername = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Huidige gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
+
+        string newUsername = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Nieuwe gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
+
+        string newPassword = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Nieuwe wachtwoord:",
+            "Ongeldig wachtwoord. Het moet 12–30 tekens zijn, met minstens één hoofdletter, één cijfer en één speciaal teken."
+        );
 
         UpdateEngineer(currentUsername, newUsername, newPassword);
+        Logging.Log(this.Username, "Update Engineer", $"Updated Engineer with (former)Username: {currentUsername}", false);
     }
 
     public void UpdateEngineer(string currentUsername, string newUsername, string newPassword)
@@ -298,23 +344,23 @@ public class SystemAdmin : ServiceEngineer
     {
         Console.Clear();
         Console.WriteLine("=== Verwijder Service Engineer ===");
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
 
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            Console.WriteLine("Gebruikersnaam mag niet leeg zijn.");
-            return;
-        }
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
         DeleteEngineer(username);
     }
 
     public void DeleteEngineer(string username)
     {
-        string sql = $"DELETE FROM User WHERE Username = '{username}' AND Role = 'Service Engineer'";
-        DatabaseHelper.ExecuteStatement(sql);
-        Logging.Log(Username, "DeleteEngineer", $"Engineer {username} deleted", true);
+        string sql = $"DELETE FROM User WHERE Username = @username AND Role = 'Service Engineer'";
+        var encryptedUsername = CryptographyHelper.Encrypt(username);
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine("Service Engineer verwijderd: " + username);
     }
 
@@ -322,25 +368,27 @@ public class SystemAdmin : ServiceEngineer
     {
         Console.Clear();
         Console.WriteLine("=== Reset Service Engineer wachtwoord ===");
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
 
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            Console.WriteLine("Gebruikersnaam mag niet leeg zijn.");
-            return;
-        }
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
-        DeleteEngineer(username);
+        ResetEngineerPassword(username);
     }
 
     public void ResetEngineerPassword(string username)
     {
         string tempPassword = "Temp" + new Random().Next(1000, 9999);
         string passwordHash = CryptographyHelper.CreateHashValue(tempPassword);
-        string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}' AND Role = 'Service Engineer'";
+        string sql = $"UPDATE User SET PasswordHash = @password WHERE Username = @username AND Role = 'Service Engineer'";
+        var encryptedUsername = CryptographyHelper.Encrypt(username);
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
         Logging.Log(Username, "ResetEngineerPassword", $"Password reset for {username}", true);
-        DatabaseHelper.ExecuteStatement(sql);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine($"Tijdelijk wachtwoord ingesteld voor {username}: {tempPassword}");
     }
 
@@ -348,14 +396,12 @@ public class SystemAdmin : ServiceEngineer
     {
         Console.Clear();
         Console.WriteLine("=== Verwijder eigen account ===");
-        Console.Write("Bevestig gebruikersnaam: ");
-        string username = Console.ReadLine();
 
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            Console.WriteLine("Gebruikersnaam mag niet leeg zijn.");
-            return;
-        }
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Bevestig gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
         Logging.Log(Username, "DeleteOwnAccount", $"Deleted own account: {username}", true);
 
         DeleteOwnAccount(username);
@@ -364,7 +410,10 @@ public class SystemAdmin : ServiceEngineer
     public void DeleteOwnAccount(string username)
     {
         string sql = $"DELETE FROM User WHERE Username = '{username}'";
-        DatabaseHelper.ExecuteStatement(sql);
+        var queryCommand = new SQLiteCommand(sql);
+        var encryptedUsername = CryptographyHelper.Encrypt(username);
+        queryCommand.Parameters.AddWithValue("@username", encryptedUsername);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Console.WriteLine("Je account is verwijderd.");
     }
 
@@ -386,7 +435,9 @@ public class SystemAdmin : ServiceEngineer
 
     public void SearchAndPrintTravelers(string searchKey)
     {
-        string sql = $@"SELECT * FROM Traveler WHERE FirstName LIKE '%{searchKey}%' OR LastName LIKE '%{searchKey}%' OR Phone LIKE '%{searchKey}%' OR Mail LIKE '%{searchKey}%' OR LicenseNumber LIKE '%{searchKey}%'";
+        string sql = $@"SELECT * FROM Traveler WHERE FirstName LIKE @searchKey OR LastName LIKE '%{searchKey}%' OR Phone LIKE '%{searchKey}%' OR Mail LIKE '%{searchKey}%' OR LicenseNumber LIKE '%{searchKey}%'";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@searchKey", CryptographyHelper.Encrypt(searchKey));
         var travellers = DatabaseHelper.Query<Traveler>(sql);
 
         Console.WriteLine("\n--- Zoekresultaten ---\n");
@@ -408,29 +459,53 @@ public class SystemAdmin : ServiceEngineer
 
         // Oude gegevens voor identificatie
         Console.WriteLine("Voer de huidige gegevens in van de traveler die je wilt bijwerken:");
-        Console.Write("Oude voornaam: ");
-        string oldFirstName = Console.ReadLine();
 
-        Console.Write("Oude achternaam: ");
-        string oldLastName = Console.ReadLine();
+        string oldFirstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Oude voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
-        Console.Write("Oud telefoonnummer (8 cijfers): ");
-        string oldPhoneNumber = Console.ReadLine();
+        string oldLastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Oude achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
+
+        string oldPhoneNumber = Validation.ValidatedInput(
+            Validation.PhoneRe,
+            "Oud telefoonnummer (8 cijfers):",
+            "Ongeldig telefoonnummer. Gebruik exact 8 cijfers."
+        );
 
         // Nieuwe gegevens
         Console.WriteLine("\nVoer de nieuwe gegevens in:");
-        Console.Write("Nieuwe gebruikersnaam: ");
-        string newUsername = Console.ReadLine();
 
-        Console.Write("Nieuw wachtwoord: ");
-        string newPassword = Console.ReadLine();
+        string newUsername = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Nieuwe gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
-        Console.Write("Nieuwe voornaam: ");
-        string newFirstName = Console.ReadLine();
+        string newPassword = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Nieuw wachtwoord:",
+            "Ongeldig wachtwoord. Het moet 12–30 tekens zijn, met minstens één hoofdletter, één cijfer en één speciaal teken."
+        );
 
-        Console.Write("Nieuwe achternaam: ");
-        string newLastName = Console.ReadLine();
+        string newFirstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Nieuwe voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
+        string newLastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Nieuwe achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
+
+        // Datum blijft met eigen prompt omdat ValidatedInput dat niet doet
         Console.Write("Nieuwe geboortedatum (yyyy-MM-dd): ");
         DateTime newBirthDate;
         while (!DateTime.TryParse(Console.ReadLine(), out newBirthDate))
@@ -438,29 +513,51 @@ public class SystemAdmin : ServiceEngineer
             Console.Write("Ongeldige invoer. Probeer opnieuw (yyyy-MM-dd): ");
         }
 
-        Console.Write("Nieuw geslacht (M/V): ");
-        string newGender = Console.ReadLine();
+        // Geslacht validatie met eigen prompt
+        string newGender;
+        do
+        {
+            Console.Write("Nieuw geslacht (M/V): ");
+            newGender = Console.ReadLine()!.Trim().ToUpper();
+            if (newGender != "M" && newGender != "V")
+            {
+                Console.WriteLine("Ongeldige invoer. Voer 'M' of 'V' in.");
+            }
+        } while (newGender != "M" && newGender != "V");
 
+        // Overige velden zonder regex validatie
         Console.Write("Nieuwe straat: ");
-        string newStreet = Console.ReadLine();
+        string newStreet = Console.ReadLine()!;
 
         Console.Write("Nieuw huisnummer: ");
-        string newHouseNumber = Console.ReadLine();
+        string newHouseNumber = Console.ReadLine()!;
 
-        Console.Write("Nieuwe postcode (1234AB): ");
-        string newZipCode = Console.ReadLine();
+        string newZipCode = Validation.ValidatedInput(
+            Validation.ZipCodeRe,
+            "Nieuwe postcode (1234AB):",
+            "Ongeldige postcode. Formaat moet 1234AB zijn (4 cijfers gevolgd door 2 hoofdletters)."
+        );
 
         Console.Write("Nieuwe woonplaats: ");
-        string newCity = Console.ReadLine();
+        string newCity = Console.ReadLine()!;
 
-        Console.Write("Nieuw e-mailadres: ");
-        string newEmail = Console.ReadLine();
+        string newEmail = Validation.ValidatedInput(
+            Validation.EmailRe,
+            "Nieuw e-mailadres:",
+            "Ongeldig e-mailadres. Gebruik een geldig formaat, bijvoorbeeld: gebruiker@voorbeeld.com"
+        );
 
-        Console.Write("Nieuw telefoonnummer (8 cijfers): ");
-        string newPhoneNumber = Console.ReadLine();
+        string newPhoneNumber = Validation.ValidatedInput(
+            Validation.PhoneRe,
+            "Nieuw telefoonnummer (8 cijfers):",
+            "Ongeldig telefoonnummer. Gebruik exact 8 cijfers."
+        );
 
-        Console.Write("Nieuw rijbewijsnummer (A1234567): ");
-        string newLicenseNumber = Console.ReadLine();
+        string newLicenseNumber = Validation.ValidatedInput(
+            Validation.LicenseRe,
+            "Nieuw rijbewijsnummer (A1234567):",
+            "Ongeldig rijbewijsnummer. Moet 1 of 2 hoofdletters gevolgd door 7 cijfers zijn."
+        );
 
         try
         {
@@ -479,9 +576,9 @@ public class SystemAdmin : ServiceEngineer
     }
 
     public void UpdateTraveler(string oldFirstName, string oldLastName, string oldPhoneNumber,
-                        string newUsername, string newPassword, string newFirstName, string newLastName, DateTime newBirthDate,
-                        string newGender, string newStreet, string newHouseNumber, string newZipCode, string newCity,
-                        string newEmail, string newPhoneNumber, string newLicenseNumber)
+                            string newUsername, string newPassword, string newFirstName, string newLastName, DateTime newBirthDate,
+                            string newGender, string newStreet, string newHouseNumber, string newZipCode, string newCity,
+                            string newEmail, string newPhoneNumber, string newLicenseNumber)
     {
         if (!Regex.IsMatch(newZipCode, @"^\d{4}[A-Z]{2}$"))
             throw new ArgumentException("Ongeldige postcode");
@@ -491,34 +588,59 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Ongeldig rijbewijsnummer");
         if (newPassword.Length < 4)
             throw new ArgumentException("Wachtwoord moet minimaal 4 tekens zijn.");
-
+        string encryptedNewUsername = CryptographyHelper.Encrypt(newUsername);
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
 
         string encryptedPhone = CryptographyHelper.Encrypt(newPhoneNumber);
         string encryptedStreet = CryptographyHelper.Encrypt(newStreet);
         string encryptedCity = CryptographyHelper.Encrypt(newCity);
+        string encryptedNewFirstName = CryptographyHelper.Encrypt(newFirstName);
+        var encryptedNewlastName = CryptographyHelper.Encrypt(newLastName);
+        var encryptedHouseNumber = CryptographyHelper.Encrypt(newHouseNumber);
+        var encryptedZip = CryptographyHelper.Encrypt(newZipCode);
+        var encryptedMail = CryptographyHelper.Encrypt(newEmail);
+        var encryptedLicense = CryptographyHelper.Encrypt(newLicenseNumber);
 
         string oldEncryptedPhone = CryptographyHelper.Encrypt(oldPhoneNumber);
-
+        
         string sql = $@"
             UPDATE Traveler SET
-                Username = '{newUsername}',
-                PasswordHash = '{passwordHash}',
-                FirstName = '{newFirstName}',
-                LastName = '{newLastName}',
-                Birthday = '{newBirthDate:yyyy-MM-dd}',
-                Gender = '{newGender}',
-                Street = '{encryptedStreet}',
-                HouseNumber = '{newHouseNumber}',
-                ZipCode = '{newZipCode}',
-                City = '{encryptedCity}',
-                Mail = '{newEmail}',
-                Phone = '{encryptedPhone}',
-                LicenseNumber = '{newLicenseNumber}'
-            WHERE FirstName = '{oldFirstName}' AND LastName = '{oldLastName}' AND Phone = '{oldEncryptedPhone}'
+                Username = @username,
+                FirstName = @firstname,
+                LastName = @lastname,
+                Birthday = @Borth,
+                Gender = @gender,
+                Street = @Estreet,
+                HouseNumber = @EHouseNr,
+                ZipCode = @EZipcode,
+                City = @ECity,
+                Mail = @Email,
+                Phone = @Ephone,
+                LicenseNumber = @ELicense
+            WHERE FirstName = @deadname AND LastName = @deadlastname AND Phone = @oldphone
         ";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", Guid.NewGuid());
+        queryCommand.Parameters.AddWithValue("@username", newUsername);
+        queryCommand.Parameters.AddWithValue("@password", passwordHash);
+        queryCommand.Parameters.AddWithValue("@firstname", encryptedNewFirstName);
+        queryCommand.Parameters.AddWithValue("@lastname", encryptedNewlastName);
+        queryCommand.Parameters.AddWithValue("@Borth", newBirthDate.ToString("dd-MM-yyyy"));
+        queryCommand.Parameters.AddWithValue("@gender", newGender);
+        queryCommand.Parameters.AddWithValue("@Estreet", encryptedStreet);
+        queryCommand.Parameters.AddWithValue("@EHouseNr", encryptedHouseNumber);
+        queryCommand.Parameters.AddWithValue("@EZipcode", encryptedZip);
+        queryCommand.Parameters.AddWithValue("@ECity", encryptedCity);
+        queryCommand.Parameters.AddWithValue("@Email", encryptedMail);
+        queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
 
-        DatabaseHelper.ExecuteStatement(sql);
+        queryCommand.Parameters.AddWithValue("@ELicense", encryptedLicense);
+        queryCommand.Parameters.AddWithValue("@deadname", CryptographyHelper.Encrypt(oldFirstName));
+        queryCommand.Parameters.AddWithValue("@EPhone", CryptographyHelper.Encrypt(oldLastName));
+        queryCommand.Parameters.AddWithValue("@EPhone", oldEncryptedPhone);
+
+
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Logging.Log(this.Username, "Update Traveller", $"Updated {oldFirstName} {oldLastName}", false);
         Console.WriteLine("Traveler succesvol bijgewerkt.");
     }
@@ -528,20 +650,23 @@ public class SystemAdmin : ServiceEngineer
         Console.Clear();
         Console.WriteLine("=== Verwijder Traveler ===");
 
-        Console.Write("Voornaam: ");
-        string firstName = Console.ReadLine();
+        string firstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
-        Console.Write("Achternaam: ");
-        string lastName = Console.ReadLine();
+        string lastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
-        Console.Write("Telefoonnummer (8 cijfers): ");
-        string phoneNumber = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(phoneNumber))
-        {
-            Console.WriteLine("Voornaam, achternaam en telefoonnummer mogen niet leeg zijn.");
-            return;
-        }
+        string phoneNumber = Validation.ValidatedInput(
+            Validation.PhoneRe,
+            "Telefoonnummer (8 cijfers):",
+            "Telefoonnummer moet exact 8 cijfers bevatten."
+        );
 
         DeleteTraveler(firstName, lastName, phoneNumber);
     }
@@ -549,7 +674,11 @@ public class SystemAdmin : ServiceEngineer
     public void DeleteTraveler(string firstName, string lastName, string phoneNumber)
     {
         string encryptedPhone = CryptographyHelper.Encrypt(phoneNumber);
-        string sql = $"DELETE FROM Traveler WHERE FirstName = '{firstName}' AND LastName = '{lastName}' AND Phone = '{encryptedPhone}'";
+        string sql = $"DELETE FROM Traveler WHERE FirstName = @firstname AND LastName = @lastname AND Phone = @Ephone";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@firstname", CryptographyHelper.Encrypt(firstName));
+        queryCommand.Parameters.AddWithValue("@lastname", CryptographyHelper.Encrypt(lastName));
+        queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
         DatabaseHelper.ExecuteStatement(sql);
         Logging.Log(Username, "DeleteTraveler", $"Traveler {firstName} {lastName} deleted", true);
         Console.WriteLine($"Traveler verwijderd: {firstName} {lastName}");
@@ -558,34 +687,67 @@ public class SystemAdmin : ServiceEngineer
     public void AddScooterMenu()
     {
         Console.Clear();
-        Console.WriteLine("=== Voeg Scooter toe ===");
+        Console.WriteLine("=== Scooter Toevoegen ===");
 
-        Console.Write("Merk: ");
-        string brand = Console.ReadLine();
+        string brand = Validation.ValidatedInput(
+            Validation.BrandRe,
+            "Merk:",
+            "Ongeldig merk. Gebruik 2–20 letters, cijfers, spaties of streepjes."
+        );
 
-        Console.Write("Model: ");
-        string model = Console.ReadLine();
+        string model = Validation.ValidatedInput(
+            Validation.ModelRe,
+            "Model:",
+            "Ongeldig model. Gebruik 1–20 letters, cijfers, spaties of streepjes."
+        );
 
         Console.Write("Maximale snelheid (km/u): ");
-        int topSpeed = int.Parse(Console.ReadLine());
+        int topSpeed;
+        while (!int.TryParse(Console.ReadLine(), out topSpeed))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor de topsnelheid: ");
+        }
 
         Console.Write("Batterijcapaciteit (Wh): ");
-        int battery = int.Parse(Console.ReadLine());
+        int battery;
+        while (!int.TryParse(Console.ReadLine(), out battery))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor de batterijcapaciteit: ");
+        }
 
-        Console.Write("Huidige lading (%): ");
-        int charge = int.Parse(Console.ReadLine());
+        Console.Write("Ladingstatus (%): ");
+        int charge;
+        while (!int.TryParse(Console.ReadLine(), out charge))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig percentage in voor de ladingstatus: ");
+        }
 
-        Console.Write("Totale actieradius (km): ");
-        int totalRange = int.Parse(Console.ReadLine());
+        Console.Write("Totaal bereik (km): ");
+        int totalRange;
+        while (!int.TryParse(Console.ReadLine(), out totalRange))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor het bereik: ");
+        }
 
-        Console.Write("Locatie: ");
-        string location = Console.ReadLine();
+        string location = Validation.ValidatedInput(
+            Validation.LocationRe,
+            "Locatie:",
+            "Ongeldige locatie. Gebruik 2–30 tekens, letters/cijfers/spaties/komma’s/punten/streepjes."
+        );
 
-        Console.Write("Niet in gebruik (0/1): ");
-        int outOfService = int.Parse(Console.ReadLine());
+        Console.Write("Buiten dienst? (1 = ja, 0 = nee): ");
+        int outOfService;
+        while (!int.TryParse(Console.ReadLine(), out outOfService) || (outOfService != 0 && outOfService != 1))
+        {
+            Console.Write("Ongeldige invoer. Voer 1 in voor ja of 0 voor nee: ");
+        }
 
-        Console.Write("Kilometerstand: ");
-        int mileage = int.Parse(Console.ReadLine());
+        Console.Write("Kilometerstand (km): ");
+        int mileage;
+        while (!int.TryParse(Console.ReadLine(), out mileage))
+        {
+            Console.Write("Ongeldige invoer. Voer een geldig getal in voor de kilometerstand: ");
+        }
 
         Console.Write("Datum laatste onderhoud (YYYY-MM-DD): ");
         DateTime lastMaintenance;
@@ -596,7 +758,7 @@ public class SystemAdmin : ServiceEngineer
 
         AddScooter(brand, model, topSpeed, battery, charge, totalRange, location, outOfService, mileage, lastMaintenance);
 
-        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu");
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
 
@@ -608,8 +770,11 @@ public class SystemAdmin : ServiceEngineer
             INSERT INTO Scooter 
             (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
             VALUES
-            ('{brand}', '{model}', {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
+            (@brand, @model, {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
         ";
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@brand", CryptographyHelper.Encrypt(brand));
+        queryCommand.Parameters.AddWithValue("@model", CryptographyHelper.Encrypt(model));
 
         DatabaseHelper.ExecuteStatement(sql);
         Logging.Log(Username, "AddScooter", $"Scooter {brand} {model} added", false);
@@ -620,16 +785,17 @@ public class SystemAdmin : ServiceEngineer
     {
         Console.Clear();
         Console.WriteLine("=== Verwijder Scooter ===");
-        Console.Write("Voer het ID van de scooter in: ");
-        string scooterId = Console.ReadLine();
 
-        if (string.IsNullOrWhiteSpace(scooterId))
-        {
-            Console.WriteLine("Scooter ID mag niet leeg zijn.");
-            return;
-        }
+        string scooterId = Validation.ValidatedInput(
+            Validation.IdRe,
+            "Voer het ID van de scooter in:",
+            "Ongeldig ID. Gebruik alleen cijfers."
+        );
 
         DeleteScooter(scooterId);
+
+        Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
+        Console.ReadKey();
     }
 
     public void DeleteScooter(string scooterId)
