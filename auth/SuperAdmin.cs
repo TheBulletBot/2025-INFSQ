@@ -76,6 +76,7 @@ public class SuperAdmin : SystemAdmin
                     case 5: UpdateEngineerMenu(); break;
                     case 6: DeleteEngineerMenu(); break;
                     case 7: ResetEngineerPasswordMenu(); break;
+                    case 8: //UpdateOwnProfile 
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
                     case 11: RestoreBackup(); break;
@@ -87,35 +88,39 @@ public class SuperAdmin : SystemAdmin
                     case 17: UpdateScooterMenu(); break;
                     case 18: DeleteScooterMenu(); break;
                     case 19: SearchAndPrintTravelersMenu(); break;
-                    case 21: AddSystemAdminMenu(); break;
-                    case 22: UpdateSystemAdminMenu(); break;
-                    case 23: DeleteSystemAdminMenu(); break;
-                    case 24: ResetSystemAdminPasswordMenu(); break;
-                    case 25: return;
+                    case 20: AddSystemAdminMenu(); break;
+                    case 21: UpdateSystemAdminMenu(); break;
+                    case 22: DeleteSystemAdminMenu(); break;
+                    case 23: ResetSystemAdminPasswordMenu(); break;
+                    case 24: return;
                 }
             }
         }
     }
 
-    public void AddSystemAdmin(string username, string password)
+    public void AddSystemAdmin(string username, string password, string firstName, string lastName)
     {
         string passwordHash = CryptographyHelper.CreateHashValue(password);
         string id = Guid.NewGuid().ToString();
+        var date = DateTime.UtcNow.ToString("dd-MM-yyyy");
 
         var cmd = @"
-            INSERT INTO User (Id, Username, PasswordHash, Role)
-            VALUES (@id, @username, @passwordHash, 'System Admin')";
+            INSERT INTO User (Id, Username, PasswordHash, Role, FirstName, LastName, RegistrationDate)
+            VALUES (@id, @username, @passwordHash, 'System Admin', @first, @last, @date)";
         var querycommand = new SQLiteCommand(cmd);
         querycommand.Parameters.AddWithValue("@id", id);
-        querycommand.Parameters.AddWithValue("@username", username);
+        querycommand.Parameters.AddWithValue("@username", CryptographyHelper.Encrypt(username));
         querycommand.Parameters.AddWithValue("@passwordHash", passwordHash);
+        querycommand.Parameters.AddWithValue("@first", CryptographyHelper.Encrypt(firstName));
+        querycommand.Parameters.AddWithValue("@last", CryptographyHelper.Encrypt(lastName));
+        querycommand.Parameters.AddWithValue("@date", date);
 
         DatabaseHelper.ExecuteStatement(cmd);
         Logging.Log(Username, "Add System Admin", $"Nieuwe System Admin toegevoegd: {username}", false);
         Console.WriteLine("System Admin toegevoegd!");
     }
 
-    public void UpdateSystemAdmin(string currentUsername, string newUsername, string newPassword)
+    public void UpdateSystemAdmin(string currentUsername, string newUsername, string newPassword, string firstName, string lastName)
     {
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
 
@@ -124,9 +129,12 @@ public class SuperAdmin : SystemAdmin
             SET Username = @newUsername, PasswordHash = @passwordHash
             WHERE Username = @currentUsername AND Role = 'System Admin'";
         var cmd = new SQLiteCommand(sql);
-        cmd.Parameters.AddWithValue("@newUsername", newUsername);
+        cmd.Parameters.AddWithValue("@newUsername", CryptographyHelper.Encrypt(newUsername));
         cmd.Parameters.AddWithValue("@passwordHash", passwordHash);
-        cmd.Parameters.AddWithValue("@currentUsername", currentUsername);
+        cmd.Parameters.AddWithValue("@currentUsername", CryptographyHelper.Encrypt(currentUsername));
+        cmd.Parameters.AddWithValue("@currentUsername", CryptographyHelper.Encrypt(firstName));
+        cmd.Parameters.AddWithValue("@currentUsername", CryptographyHelper.Encrypt(lastName));
+        
 
         DatabaseHelper.ExecuteStatement(cmd);
         Logging.Log(Username, "Update System Admin", $"System Admin {currentUsername} gewijzigd naar {newUsername}", false);
@@ -168,11 +176,29 @@ public class SuperAdmin : SystemAdmin
     {
         Console.Clear();
         Console.WriteLine("=== Voeg System Admin toe ===");
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
-        Console.Write("Wachtwoord: ");
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
-        string password = Console.ReadLine();
+        string password = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Wachtwoord:",
+            "Ongeldig wachtwoord. Het moet 12–30 tekens zijn, met minstens één hoofdletter, één cijfer en één speciaal teken."
+        );
+
+        string firstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
+
+        string lastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
@@ -180,19 +206,41 @@ public class SuperAdmin : SystemAdmin
             return;
         }
 
-        AddSystemAdmin(username, password);
+        AddSystemAdmin(username, password, firstName, lastName);
     }
 
     public void UpdateSystemAdminMenu()
     {
         Console.Clear();
         Console.WriteLine("=== Pas System Admin aan ===");
-        Console.Write("Huidige gebruikersnaam: ");
-        string currentUsername = Console.ReadLine();
-        Console.Write("Nieuwe gebruikersnaam: ");
-        string newUsername = Console.ReadLine();
-        Console.Write("Nieuwe wachtwoord: ");
-        string newPassword = Console.ReadLine();
+        string currentUsername = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
+        string newUsername = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
+
+        string newPassword = Validation.ValidatedInput(
+            Validation.PasswordRe,
+            "Wachtwoord:",
+            "Ongeldig wachtwoord. Het moet 12–30 tekens zijn, met minstens één hoofdletter, één cijfer en één speciaal teken."
+        );
+
+        string firstName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Voornaam:",
+            "Ongeldige voornaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
+
+        string lastName = Validation.ValidatedInput(
+            Validation.NameRe,
+            "Achternaam:",
+            "Ongeldige achternaam. Gebruik alleen letters, spaties, streepjes of apostrofs (2–30 tekens)."
+        );
 
         if (string.IsNullOrWhiteSpace(currentUsername) || string.IsNullOrWhiteSpace(newUsername) || string.IsNullOrWhiteSpace(newPassword))
         {
@@ -200,15 +248,18 @@ public class SuperAdmin : SystemAdmin
             return;
         }
 
-        UpdateSystemAdmin(currentUsername, newUsername, newPassword);
+        UpdateSystemAdmin(currentUsername, newUsername, newPassword, firstName, lastName);
     }
 
     public void DeleteSystemAdminMenu()
     {
         Console.Clear();
         Console.WriteLine("=== Verwijder System Admin ===");
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
         if (string.IsNullOrWhiteSpace(username))
         {
@@ -222,9 +273,12 @@ public class SuperAdmin : SystemAdmin
     public void ResetSystemAdminPasswordMenu()
     {
         Console.Clear();
-        Console.WriteLine("=== Verwijder System Admin ===");
-        Console.Write("Gebruikersnaam: ");
-        string username = Console.ReadLine();
+        Console.WriteLine("=== Verander System Admin Wachtwoord ===");
+        string username = Validation.ValidatedInput(
+            Validation.UsernameRe,
+            "Gebruikersnaam:",
+            "Ongeldige gebruikersnaam. Deze moet 8–10 tekens zijn en mag alleen letters, cijfers, punten, apostrofs of underscores bevatten."
+        );
 
         if (string.IsNullOrWhiteSpace(username))
         {

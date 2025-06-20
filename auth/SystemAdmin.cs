@@ -105,18 +105,6 @@ public class SystemAdmin : ServiceEngineer
         Console.Clear();
         Console.WriteLine("=== Voeg Traveler toe ===");
 
-        string username = Validation.ValidatedInput(
-            Validation.UsernameRe,
-            "Gebruikersnaam:",
-            "Ongeldige gebruikersnaam. Gebruik 8–10 tekens met letters, cijfers, punten of underscores."
-        );
-
-        string password = Validation.ValidatedInput(
-            Validation.PasswordRe,
-            "Wachtwoord:",
-            "Ongeldig wachtwoord. Gebruik 12–30 tekens met hoofdletter, kleine letter, cijfer en speciaal teken."
-        );
-
         string firstName = Validation.ValidatedInput(
             Validation.NameRe,
             "Voornaam:",
@@ -177,7 +165,7 @@ public class SystemAdmin : ServiceEngineer
 
         try
         {
-            AddTraveler(username, password, firstName, lastName, birthday, gender, street, houseNumber, zipCode, city, email, phone, license);
+            AddTraveler(firstName, lastName, birthday, gender, street, houseNumber, zipCode, city, email, phone, license);
         }
         catch (Exception ex)
         {
@@ -188,7 +176,7 @@ public class SystemAdmin : ServiceEngineer
         Console.ReadKey();
     }
 
-    public void AddTraveler(string username, string password,
+    public void AddTraveler(
         string firstName, string lastName, DateTime birthday, string gender,
         string street, string houseNumber, string zipCode, string city,
         string email, string phone, string license)
@@ -199,25 +187,38 @@ public class SystemAdmin : ServiceEngineer
             throw new ArgumentException("Ongeldig telefoonnummer");
         if (!Regex.IsMatch(license, @"^[A-Z]{1,2}\d{7}$"))
             throw new ArgumentException("Ongeldig rijbewijsnummer");
-        if (!Regex.IsMatch(password, Validation.PasswordRe))
-            throw new ArgumentException("Wachtwoord moet minimaal 12 tekens zijn.");
 
-        string passwordHash = CryptographyHelper.CreateHashValue(password);
-        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
+        string registrationDate = DateTime.UtcNow.ToString("dd-MM-yyyy");
 
         string encryptedPhone = CryptographyHelper.Encrypt(phone);
         string encryptedStreet = CryptographyHelper.Encrypt(street);
         string encryptedCity = CryptographyHelper.Encrypt(city);
+        var id = Guid.NewGuid();
 
-        string sql = $@"INSERT INTO Traveller 
-            (Id,FirstName, LastName, Birthday, Gender,
+        string sql = @"INSERT INTO Traveller 
+            (Id, FirstName, LastName, Birthday, Gender,
              Street, HouseNumber, ZipCode, City, Mail, Phone, LicenseNumber, RegistrationDate)
             VALUES
-            ('{Guid.NewGuid()}', '{username}', '{passwordHash}', '{firstName}', '{lastName}', '{birthday:yyyy-MM-dd}', '{gender}',
-             '{encryptedStreet}', '{houseNumber}', '{zipCode}', '{encryptedCity}', '{email}', '{encryptedPhone}', '{license}', '{registrationDate}')";
+            (@id, @firstname, @lastname, '@Borth', @gender,
+             @Estreet, @EHouseNr, @EZipcode, @ECity, @Email, @EPhone, @ELicense, @registrationDate)";
 
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@id", id);
+        queryCommand.Parameters.AddWithValue("@firstname", CryptographyHelper.Encrypt(firstName));
+        queryCommand.Parameters.AddWithValue("@lastname", CryptographyHelper.Encrypt(lastName));
+        queryCommand.Parameters.AddWithValue("@Borth", birthday.ToString("dd-MM-yyyy"));
+        queryCommand.Parameters.AddWithValue("@gender", gender);
+        queryCommand.Parameters.AddWithValue("@Estreet", encryptedStreet);
+        queryCommand.Parameters.AddWithValue("@EHouseNr", CryptographyHelper.Encrypt(houseNumber));
+        queryCommand.Parameters.AddWithValue("@EZipcode", CryptographyHelper.Encrypt(zipCode));
+        queryCommand.Parameters.AddWithValue("@ECity", encryptedCity);
+        queryCommand.Parameters.AddWithValue("@Email", CryptographyHelper.Encrypt(email));
+        queryCommand.Parameters.AddWithValue("@EPhone", encryptedPhone);
+        queryCommand.Parameters.AddWithValue("@registrationDate", registrationDate);
+
+        queryCommand.Parameters.AddWithValue("@ELicense", CryptographyHelper.Encrypt(license));
         DatabaseHelper.ExecuteStatement(sql);
-        Logging.Log(Username, "AddTraveler", $"Traveler {username} added", false);
+        Logging.Log(Username, "AddTraveler", $"Traveler {id} added", false);
         Console.WriteLine("Traveller succesvol toegevoegd.");
     }
 
@@ -620,7 +621,6 @@ public class SystemAdmin : ServiceEngineer
 
         string sql = $@"
             UPDATE Traveler SET
-                Username = @username,
                 FirstName = @firstname,
                 LastName = @lastname,
                 Birthday = @Borth,
@@ -635,9 +635,6 @@ public class SystemAdmin : ServiceEngineer
             WHERE FirstName = @deadname AND LastName = @deadlastname AND Phone = @oldphone
         ";
         var queryCommand = new SQLiteCommand(sql);
-        queryCommand.Parameters.AddWithValue("@id", Guid.NewGuid());
-        queryCommand.Parameters.AddWithValue("@username", newUsername);
-        queryCommand.Parameters.AddWithValue("@password", passwordHash);
         queryCommand.Parameters.AddWithValue("@firstname", encryptedNewFirstName);
         queryCommand.Parameters.AddWithValue("@lastname", encryptedNewlastName);
         queryCommand.Parameters.AddWithValue("@Borth", newBirthDate.ToString("dd-MM-yyyy"));
@@ -779,19 +776,28 @@ public class SystemAdmin : ServiceEngineer
 
     public void AddScooter(string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
-        string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
+        string formattedDate = lastMaintenance.ToString("dd-MM-yyyy");
 
         string sql = $@"
             INSERT INTO Scooter 
-            (Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
+            (SerialNumber,Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRange, Location, OutOfService, Mileage, LastMaintenance)
             VALUES
-            (@brand, @model, {topSpeed}, {battery}, {charge}, {totalRange}, '{location}', {outOfService}, {mileage}, '{formattedDate}')
+            (@serial, @brand, @model, @topSpeed, @battery, @charge, @totalrange, @location, @oos, @miles, @date)
         ";
         var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@brand", Guid.NewGuid());
         queryCommand.Parameters.AddWithValue("@brand", CryptographyHelper.Encrypt(brand));
         queryCommand.Parameters.AddWithValue("@model", CryptographyHelper.Encrypt(model));
+        queryCommand.Parameters.AddWithValue("@topSpeed", CryptographyHelper.Encrypt(topSpeed.ToString()));
+        queryCommand.Parameters.AddWithValue("@battery", CryptographyHelper.Encrypt(battery.ToString()));
+        queryCommand.Parameters.AddWithValue("@charge", CryptographyHelper.Encrypt(charge.ToString()));
+        queryCommand.Parameters.AddWithValue("@totalrange", CryptographyHelper.Encrypt(totalRange.ToString()));
+        queryCommand.Parameters.AddWithValue("@location", CryptographyHelper.Encrypt(location));
+        queryCommand.Parameters.AddWithValue("@oos", CryptographyHelper.Encrypt(outOfService.ToString()));
+        queryCommand.Parameters.AddWithValue("@miles", CryptographyHelper.Encrypt(mileage.ToString()));
+        queryCommand.Parameters.AddWithValue("@date", CryptographyHelper.Encrypt(formattedDate));
 
-        DatabaseHelper.ExecuteStatement(sql);
+        DatabaseHelper.ExecuteStatement(queryCommand);
         Logging.Log(Username, "AddScooter", $"Scooter {brand} {model} added", false);
         Console.WriteLine("Scooter succesvol toegevoegd.");
     }
@@ -802,9 +808,9 @@ public class SystemAdmin : ServiceEngineer
         Console.WriteLine("=== Verwijder Scooter ===");
 
         string scooterId = Validation.ValidatedInput(
-            Validation.IdRe,
-            "Voer het ID van de scooter in:",
-            "Ongeldig ID. Gebruik alleen cijfers."
+            Validation.NoRegex,
+            "Voer het Serienummer van de scooter in:",
+            "Ongeldig Serienummer. Gebruik alleen cijfers."
         );
 
         DeleteScooter(scooterId);
@@ -815,10 +821,14 @@ public class SystemAdmin : ServiceEngineer
 
     public void DeleteScooter(string scooterId)
     {
-        string sql = $"DELETE FROM Scooter WHERE Id = '{scooterId}'";
+        string sql = $"DELETE FROM Scooter WHERE SerialNumber = @serial";
+
+        var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@serial", CryptographyHelper.Encrypt(scooterId));
+
         DatabaseHelper.ExecuteStatement(sql);
-        Logging.Log(Username, "DeleteScooter", $"Scooter with ID {scooterId} deleted", true);
-        Console.WriteLine($"Scooter met ID {scooterId} is verwijderd.");
+        Logging.Log(Username, "DeleteScooter", $"Scooter with Serial {scooterId} deleted", true);
+        Console.WriteLine($"Scooter met Serienummer {scooterId} is verwijderd.");
     }
     public void CreateSystemBackup()
     {

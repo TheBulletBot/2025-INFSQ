@@ -73,10 +73,10 @@ public class ServiceEngineer : User
         Console.Clear();
         Console.WriteLine("=== Scooter Bijwerken ===");
 
-        string id = Validation.ValidatedInput(
+        string serialNumber = Validation.ValidatedInput(
             Validation.IdRe,
-            "Voer het ID van de scooter in die je wilt bijwerken:",
-            "Ongeldig ID. Gebruik alleen cijfers."
+            "Voer het Serienummer van de scooter in die je wilt bijwerken:",
+            "Ongeldig Serienummer. Gebruik alleen cijfers."
         );
 
         string brand = Validation.ValidatedInput(
@@ -146,13 +146,13 @@ public class ServiceEngineer : User
             Console.Write("Ongeldige datum. Probeer opnieuw (YYYY-MM-DD): ");
         }
 
-        UpdateScooter( charge, totalRange, location, outOfService, mileage, lastMaintenance);
+        UpdateScooter(serialNumber, brand, model, topSpeed, battery, charge, totalRange, location, outOfService, mileage, lastMaintenance);
 
         Console.WriteLine("\nDruk op een toets om terug te keren naar het menu.");
         Console.ReadKey();
     }
 
-     public void UpdateScooter( int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
+    public void UpdateScooter(string serialNumber, string brand, string model, int topSpeed, int battery, int charge, int totalRange, string location, int outOfService, int mileage, DateTime lastMaintenance)
     {
         string formattedDate = lastMaintenance.ToString("yyyy-MM-dd");
 
@@ -163,9 +163,14 @@ public class ServiceEngineer : User
                 OutOfService = @outOfService,
                 Mileage = @mileage,
                 LastMaintenance = @lastMaintenance
-            WHERE Id = @id";
+            WHERE SerialNumber = @serial";
 
         var queryCommand = new SQLiteCommand(sql);
+        queryCommand.Parameters.AddWithValue("@serial", serialNumber);
+        queryCommand.Parameters.AddWithValue("@brand", brand);
+        queryCommand.Parameters.AddWithValue("@model", model);
+        queryCommand.Parameters.AddWithValue("@topSpeed", topSpeed);
+        queryCommand.Parameters.AddWithValue("@battery", battery);
         queryCommand.Parameters.AddWithValue("@charge", charge);
         queryCommand.Parameters.AddWithValue("@totalRange", totalRange);
         queryCommand.Parameters.AddWithValue("@location", location);
@@ -174,7 +179,7 @@ public class ServiceEngineer : User
         queryCommand.Parameters.AddWithValue("@lastMaintenance", formattedDate);
 
         DatabaseHelper.ExecuteStatement(queryCommand);
-        Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt", false);
+        Logging.Log(this.Username, "Update Scooter", $"Scooter bijgewerkt met ID: {serialNumber}", false);
         Console.WriteLine("Scooter succesvol bijgewerkt.");
     }
 
@@ -230,7 +235,7 @@ public class ServiceEngineer : User
     {
         string sql = @"SELECT * FROM Scooter
         WHERE 
-            Id LIKE @keyword OR
+            SerialNumber LIKE @keyword OR
             Brand LIKE @keyword OR
             Model LIKE @keyword OR
             Location LIKE @keyword OR
