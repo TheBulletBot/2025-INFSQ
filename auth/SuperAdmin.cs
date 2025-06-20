@@ -79,7 +79,7 @@ public class SuperAdmin : SystemAdmin
                     case 8: //UpdateOwnProfile 
                     case 9: DeleteOwnAccountMenu(); break;
                     case 10: BackupMenu(); break;
-                    case 11: RestoreBackup(); break;
+                    case 11: //RestoreBackup(); break;
                     case 12: ViewLogs(); break;
                     case 13: AddTravelerMenu(); break;
                     case 14: UpdateTravelerMenu(); break;
