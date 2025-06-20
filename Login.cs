@@ -1,6 +1,6 @@
 using System.Collections;
+using System.Data.SQLite;
 using System.Security.Cryptography;
-using Microsoft.Data.Sqlite;
 
 public static class Login
 {
@@ -45,8 +45,8 @@ public static class Login
 
                 //fetch User with username = 
                 var baseQueryString = @"SELECT * FROM User u WHERE u.Username = @username";
-                var queryCommand = new SqliteCommand(baseQueryString);
-                queryCommand.Parameters.Add(new SqliteParameter("@username", username));
+                var queryCommand = new SQLiteCommand(baseQueryString);
+                queryCommand.Parameters.Add(new SQLiteParameter("@username", username));
                 var loginAttemptDBUser = DatabaseHelper.Query<DBUser>(queryCommand);
                 if (loginAttemptDBUser.Count <= 0)
                 {

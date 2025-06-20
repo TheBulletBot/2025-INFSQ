@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Data.SQLite;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,20 +128,35 @@ public class ServiceEngineer : User
 
         string sql = $@"
             UPDATE Scooter
-            SET Brand = '{brand}',
-                Model = '{model}',
-                TopSpeed = {topSpeed},
-                BatteryCapacity = {battery},
-                StateOfCharge = {charge},
-                TargetRange = {totalRange},
-                Location = '{location}',
-                OutOfService = {outOfService},
-                Mileage = {mileage},
-                LastMaintenance = '{formattedDate}'
-            WHERE Id = '{id}'
+            SET Brand = '@brand',
+                Model = '@model',
+                TopSpeed = @topspeed,
+                BatteryCapacity = @battery,
+                StateOfCharge = @charge,
+                TargetRange = @totalrange,
+                Location = '@location',
+                OutOfService = @outofService,
+                Mileage = @mileage,
+                LastMaintenance = '@lastMaintenance'
+            WHERE Id = '@id'
         ";
+        var queryCommand = new SQLiteCommand(sql);
+            queryCommand.Parameters.Add(new SQLiteParameter("@brand", brand));
+            queryCommand.Parameters.Add(new SQLiteParameter("@model", model));
+            queryCommand.Parameters.Add(new SQLiteParameter("@topspeed", topSpeed));
+            queryCommand.Parameters.Add(new SQLiteParameter("@battery", battery));
+            queryCommand.Parameters.Add(new SQLiteParameter("@charge", charge));
+            queryCommand.Parameters.Add(new SQLiteParameter("@totalrange", totalRange));
+            queryCommand.Parameters.Add(new SQLiteParameter("@location", location));
+            queryCommand.Parameters.Add(new SQLiteParameter("@outofService", outOfService));
+            queryCommand.Parameters.Add(new SQLiteParameter("@mileage", mileage));
+            queryCommand.Parameters.Add(new SQLiteParameter("@lastMaintenance", brand));
+            queryCommand.Parameters.Add(new SQLiteParameter("@id", id));
 
-        DatabaseHelper.ExecuteStatement(sql);
+
+
+        DatabaseHelper.ExecuteStatement(queryCommand);
+        Logging.Log(this.Username, "Update Scooter", $"Updated Scooter with ID: {id}", false);
         Console.WriteLine("Scooter succesvol bijgewerkt.");
     }
     public void UpdateOwnPasswordMenu()
@@ -173,6 +189,7 @@ public class ServiceEngineer : User
         string passwordHash = CryptographyHelper.CreateHashValue(newPassword);
         string sql = $"UPDATE User SET PasswordHash = '{passwordHash}' WHERE Username = '{username}'";
         DatabaseHelper.ExecuteStatement(sql);
+        Logging.Log(this.Username, "Update Own Password", $"Changed own password.", false);
         Console.WriteLine("Je account is bijgewerkt.");
     }
 }

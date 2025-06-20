@@ -8,4 +8,19 @@ public static class Validation
     public static readonly string ZipCodeRe = @"^\d{4}[A-Z]{2}$";
     public static readonly string PhoneRe = @"^\d{8}$";
     public static readonly string LicenseRe = @"^[A-Z]{1,2}\d{7}$";
+
+    public static string ValidatedInput(string pattern, string errorMessage)
+    {
+        string userResponse = Console.ReadLine()!;
+        while (true)
+        {
+            if (Regex.IsMatch(userResponse, pattern))
+            {
+                return userResponse;
+            }
+            System.Console.WriteLine(errorMessage);
+            userResponse = Console.ReadLine();
+        }
+
+    }
 }
