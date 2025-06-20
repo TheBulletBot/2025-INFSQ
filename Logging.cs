@@ -9,7 +9,7 @@ static class Logging
         var today = DateTime.Now;
         var todayDateString = today.ToString("d");
         var todayTimeString = today.ToString("T");
-        var logFilePath = Path.Combine(projectRoot, $"Logs/{today:dd-MM-yyyy}.log");
+        var logFilePath = Path.Combine(projectRoot, $"LogFiles/{today:dd-MM-yyyy}.log");
         if (!File.Exists(logFilePath))
         {
             CreateLogFile(logFilePath,todayDateString, todayTimeString, username);
@@ -20,7 +20,7 @@ static class Logging
         var nextIdInLine = logs.Last().Id + 1;
 
         LogItem newLogItem = new(nextIdInLine, todayDateString, todayTimeString, username, action, description, isSuspicious);
-        logs.Append(newLogItem);
+        logs.Add(newLogItem);
         var writableJString = JsonSerializer.Serialize(logs);
         var encryptedWritableString = CryptographyHelper.Encrypt(writableJString);
 

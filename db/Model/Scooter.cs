@@ -6,8 +6,7 @@ public class Scooter
     public int TopSpeed { get; }
     public int BatteryCapacity { get; }
     public int StateOfCharge { get; }
-    public int TargetMax { get; }
-    public int TargetMin { get; }
+    public string TargetRange{ get; }
     public string Location { get; }
     public int OutOfService { get; }
     public float Mileage { get; }
@@ -20,8 +19,8 @@ public class Scooter
         int TopSpeed,
         int BatteryCapacity,
         int StateOfCharge,
-        int TargetMax,
-        int TargetMin,
+        string TargetRange,
+
         string Location,
         int OutOfService,
         float Mileage,
@@ -32,8 +31,8 @@ public class Scooter
         this.Model = Model;
         this.TopSpeed = TopSpeed;
         this.BatteryCapacity = BatteryCapacity;
-        this.TargetMax = TargetMax;
-        this.TargetMin = TargetMin;
+        this.StateOfCharge = StateOfCharge;
+        this.TargetRange = TargetRange;
         this.Location = Location;
         this.OutOfService = OutOfService;
         this.Mileage = Mileage;

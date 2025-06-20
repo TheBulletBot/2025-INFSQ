@@ -1,15 +1,13 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.VisualBasic;
-using SQLitePCL;
+using System.Data.SQLite;
 /// <summary>
 /// This class and these functions are here to quickly set up a database when one doesn't exist. 
 /// THIS IS FOR THE GRADING TEACHER'S CONVENIENCE. So that they have access to at lease SOME sample data when the database starts.
 /// </summary>
 public static class DBSetup
 {
-    private static string ConnectionString = new SqliteConnectionStringBuilder()
+    private static string ConnectionString = new SQLiteConnectionStringBuilder()
     {
-        Mode = SqliteOpenMode.ReadWriteCreate,
+        ReadOnly = false,
         DataSource = DatabaseHelper.DatabasePath
     }.ToString();
     public static void SetupDB()
@@ -20,6 +18,7 @@ public static class DBSetup
             InitScooterTable();
             InitTravelerTable();
             InitUserTable();
+            InitDBBackupTable();
         }
         if (IsDatabaseEmpty())
         {
@@ -50,7 +49,7 @@ public static class DBSetup
     private static void InitScooterTable()
     {
         string queryString = @"CREATE TABLE IF NOT EXISTS Scooter(
-            SerialNumber TEXT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE, 
+            SerialNumber TEXT PRIMARY KEY NOT NULL UNIQUE, 
             Brand TEXT,
             Model TEXT,
             TopSpeed INTEGER,
@@ -63,7 +62,7 @@ public static class DBSetup
             OutOfService INTEGER,
             LastService DATE
             );";
-        using (var connection = new SqliteConnection(ConnectionString))
+        using (var connection = new SQLiteConnection(ConnectionString))
         {
             connection.Open();
 
@@ -85,8 +84,7 @@ public static class DBSetup
                     TopSpeed,
                     BatteryCapacity,
                     StateOfCharge,
-                    TargetMin,
-                    TargetMax,
+                    targetRange
                     Mileage,
                     Location,
                     OutOfService,
@@ -99,8 +97,7 @@ public static class DBSetup
                     30,
                     100,
                     70,
-                    30,
-                    80,
+                    '30-80',
                     3456,
                     'here',
                     0,
@@ -111,8 +108,7 @@ public static class DBSetup
                     30,
                     100,
                     80,
-                    30,
-                    80,
+                    '30-80',
                     1295,
                     '19.94636:162.84792',
                     0,
@@ -123,14 +119,13 @@ public static class DBSetup
                     30,
                     100,
                     40,
-                    30,
-                    80,
+                    '30-80',
                     8465,
                     '19.94636:162.84792',
                     0,
                     1-6-2025);";
 
-        using (var connection = new SqliteConnection(ConnectionString))
+        using (var connection = new SQLiteConnection(ConnectionString))
         {
             connection.Open();
 
@@ -147,19 +142,18 @@ public static class DBSetup
     private static void InitTravelerTable()
     {
         DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS Traveler(
-            Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
-            Username VARCHAR(10) UNIQUE,
-            PasswordHash INT,
-            FirstName VARCHAR(255),
-            LastName VARCHAR(255),
-            Birthday VARCHAR(255),
-            Gender VARCHAR(255), 
-            Street VARCHAR(255),
-            HouseNumber VARCHAR(5),
-            ZipCode VARCHAR(255),
-            City VARCHAR(255),
-            Mail VARCHAR(255),
-            Phone VARCHAR (8),
+            Id TEXT PRIMARY KEY NOT NULL UNIQUE,
+            Username TEXT UNIQUE,
+            FirstName TEXT,
+            LastName TEXT,
+            Birthday TEXT,
+            Gender TEXT, 
+            Street TEXT,
+            HouseNumber TEXT,
+            ZipCode TEXT,
+            City TEXT,
+            Mail TEXT,
+            Phone TEXT,
             LicenseNumber TEXT UNIQUE NOT NULL,
             RegistrationDate TEXT
             );");
@@ -209,9 +203,9 @@ public static class DBSetup
     {
         DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
         User(
-        Id INT AUTO INCREMENT PRIMARY KEY NOT NULL UNIQUE,
-        Username VARCHAR(10) UNIQUE,
-        PasswordHash INT,
+        Id TEXT PRIMARY KEY NOT NULL UNIQUE,
+        Username TEXT UNIQUE,
+        PasswordHash TEXT,
         Role TEXT, 
         FirstName TEXT, 
         LastName TEXT,
@@ -228,5 +222,15 @@ public static class DBSetup
         VALUES(1,'{encryptedUsername1}','{hashedPassword}','ADMIN','Moo','Snuckle','18-06-2025')
         ");
         Console.WriteLine("Inserted Seed data into User.");
+    }
+
+    private static void InitDBBackupTable()
+    {
+        DatabaseHelper.ExecuteStatement(@"CREATE TABLE IF NOT EXISTS 
+        DBBackup(
+        AdminId TEXT NOT NULL,
+        BackupCode TEXT NOT NULL);
+        ");
+        Console.WriteLine("Created User Table.");
     }
 }

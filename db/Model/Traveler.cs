@@ -1,6 +1,6 @@
 public class Traveler
 {
-    public int Id { get; }
+    public string Id { get; }
     public string FirstName { get; }
     public string LastName { get; }
     public string Birthday { get; }
@@ -14,7 +14,7 @@ public class Traveler
     public string LicenseNumber { get; }
 
     public Traveler(
-        int id,
+        string id,
         string FirstName,
         string LastName,
         string Birthday,
