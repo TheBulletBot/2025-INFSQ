@@ -1,5 +1,4 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.VisualBasic;
+using System.Data.SQLite;
 using SQLitePCL;
 /// <summary>
 /// This class and these functions are here to quickly set up a database when one doesn't exist. 
@@ -7,9 +6,9 @@ using SQLitePCL;
 /// </summary>
 public static class DBSetup
 {
-    private static string ConnectionString = new SqliteConnectionStringBuilder()
+    private static string ConnectionString = new SQLiteConnectionStringBuilder()
     {
-        Mode = SqliteOpenMode.ReadWriteCreate,
+        ReadOnly = false,
         DataSource = DatabaseHelper.DatabasePath
     }.ToString();
     public static void SetupDB()
@@ -63,7 +62,7 @@ public static class DBSetup
             OutOfService INTEGER,
             LastService DATE
             );";
-        using (var connection = new SqliteConnection(ConnectionString))
+        using (var connection = new SQLiteConnection(ConnectionString))
         {
             connection.Open();
 
@@ -130,7 +129,7 @@ public static class DBSetup
                     0,
                     1-6-2025);";
 
-        using (var connection = new SqliteConnection(ConnectionString))
+        using (var connection = new SQLiteConnection(ConnectionString))
         {
             connection.Open();
 
