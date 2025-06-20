@@ -1,5 +1,4 @@
 using System.Data.SQLite;
-using SQLitePCL;
 /// <summary>
 /// This class and these functions are here to quickly set up a database when one doesn't exist. 
 /// THIS IS FOR THE GRADING TEACHER'S CONVENIENCE. So that they have access to at lease SOME sample data when the database starts.
